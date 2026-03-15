@@ -1,0 +1,178 @@
+{
+  "projectType": "saas",
+  "projectName": "Anchor",
+  "projectDescription": "An offline-first, self-hostable note-taking application with rich text editing, cross-device sync, note sharing, and OIDC authentication support.",
+  "theme": "almond",
+  "primaryColor": "#242b2c",
+  "lightColor": "#040404",
+  "darkColor": null,
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Documentation",
+        "groups": [
+          {
+            "group": "Get Started",
+            "pages": [
+              "introduction",
+              "quickstart"
+            ]
+          },
+          {
+            "group": "Self Hosting",
+            "pages": [
+              "self-hosting/docker",
+              "self-hosting/configuration",
+              "self-hosting/external-database"
+            ]
+          },
+          {
+            "group": "Authentication",
+            "pages": [
+              "authentication/local-auth",
+              "authentication/oidc"
+            ]
+          },
+          {
+            "group": "Features",
+            "pages": [
+              "features/notes",
+              "features/tags",
+              "features/sharing",
+              "features/offline-sync",
+              "features/admin-panel"
+            ]
+          },
+          {
+            "group": "Mobile App",
+            "pages": [
+              "mobile/installation",
+              "mobile/offline-usage"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "API Reference",
+        "groups": [
+          {
+            "group": "Overview",
+            "pages": [
+              "api-reference/overview"
+            ]
+          },
+          {
+            "group": "Authentication",
+            "pages": [
+              "api-reference/auth/register",
+              "api-reference/auth/login",
+              "api-reference/auth/refresh",
+              "api-reference/auth/logout",
+              "api-reference/auth/profile"
+            ]
+          },
+          {
+            "group": "Notes",
+            "pages": [
+              "api-reference/notes/list",
+              "api-reference/notes/create",
+              "api-reference/notes/get",
+              "api-reference/notes/update",
+              "api-reference/notes/delete",
+              "api-reference/notes/sync",
+              "api-reference/notes/trash",
+              "api-reference/notes/archive"
+            ]
+          },
+          {
+            "group": "Tags",
+            "pages": [
+              "api-reference/tags/list",
+              "api-reference/tags/create",
+              "api-reference/tags/update",
+              "api-reference/tags/delete",
+              "api-reference/tags/sync"
+            ]
+          },
+          {
+            "group": "Note Sharing",
+            "pages": [
+              "api-reference/shares/share-note",
+              "api-reference/shares/list-shares",
+              "api-reference/shares/update-permission",
+              "api-reference/shares/revoke"
+            ]
+          },
+          {
+            "group": "Admin",
+            "pages": [
+              "api-reference/admin/stats",
+              "api-reference/admin/users",
+              "api-reference/admin/settings"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "keyFeatures": [
+    "Offline-first architecture — all edits work without an internet connection using a local database",
+    "Rich text editor with bold, italic, underline, headings, lists, and checkboxes",
+    "Cross-device sync — changes propagate automatically when back online",
+    "Note sharing with viewer or editor permissions",
+    "Tags system with custom names and colors",
+    "Customizable note backgrounds (solid colors and patterns)",
+    "Pin, archive, and trash notes with recovery support",
+    "Full-text search by title or content",
+    "Admin panel for user management, registration control, and system stats",
+    "OIDC authentication (Pocket ID, Authelia, Authentik, Keycloak, etc.)",
+    "Self-hostable via a single Docker container with embedded database"
+  ],
+  "publicApiSurface": [
+    "POST /api/auth/register",
+    "POST /api/auth/login",
+    "POST /api/auth/refresh",
+    "POST /api/auth/logout",
+    "GET /api/auth/me",
+    "GET /api/auth/api-token",
+    "POST /api/auth/api-token/regenerate",
+    "DELETE /api/auth/api-token",
+    "PATCH /api/auth/profile",
+    "POST /api/auth/change-password",
+    "GET /api/notes",
+    "POST /api/notes",
+    "POST /api/notes/sync",
+    "GET /api/notes/trash",
+    "GET /api/notes/archive",
+    "GET /api/notes/:id",
+    "PATCH /api/notes/:id",
+    "DELETE /api/notes/:id",
+    "DELETE /api/notes/:id/permanent",
+    "PATCH /api/notes/:id/restore",
+    "POST /api/notes/bulk/delete",
+    "POST /api/notes/bulk/archive",
+    "POST /api/notes/:id/shares",
+    "GET /api/notes/:id/shares",
+    "PATCH /api/notes/:id/shares/:shareId",
+    "DELETE /api/notes/:id/shares/:shareId",
+    "GET /api/tags",
+    "POST /api/tags",
+    "POST /api/tags/sync",
+    "GET /api/tags/:id",
+    "GET /api/tags/:id/notes",
+    "PATCH /api/tags/:id",
+    "DELETE /api/tags/:id",
+    "GET /api/admin/stats",
+    "GET /api/admin/users",
+    "POST /api/admin/users",
+    "PATCH /api/admin/users/:id",
+    "DELETE /api/admin/users/:id",
+    "POST /api/admin/users/:id/reset-password",
+    "POST /api/admin/users/:id/approve",
+    "POST /api/admin/users/:id/reject",
+    "GET /api/admin/settings/registration",
+    "PATCH /api/admin/settings/registration",
+    "GET /api/admin/settings/oidc",
+    "PATCH /api/admin/settings/oidc"
+  ]
+}
