@@ -1,0 +1,262 @@
+---
+title: "Profile"
+description: "View and update your user profile"
+---
+
+## Get current user
+
+```
+GET /api/auth/me
+```
+
+Requires authentication.
+
+Returns the profile of the currently authenticated user.
+
+### Example Request
+
+```bash
+curl https://your-anchor.example.com/api/auth/me \
+  -H "Authorization: Bearer <access_token>"
+```
+
+### Response
+
+<ResponseField name="id" type="string">
+  Unique user ID (UUID).
+</ResponseField>
+
+<ResponseField name="email" type="string">
+  The user's email address.
+</ResponseField>
+
+<ResponseField name="name" type="string">
+  The user's display name.
+</ResponseField>
+
+<ResponseField name="profileImage" type="string | null">
+  URL path to the profile image, or `null` if not set.
+</ResponseField>
+
+<ResponseField name="isAdmin" type="boolean">
+  Whether the user has admin privileges.
+</ResponseField>
+
+<ResponseField name="status" type="string">
+  Account status: `active` or `pending`.
+</ResponseField>
+
+<ResponseField name="createdAt" type="string">
+  ISO 8601 timestamp of account creation.
+</ResponseField>
+
+<ResponseField name="updatedAt" type="string">
+  ISO 8601 timestamp of last update.
+</ResponseField>
+
+---
+
+## Update profile
+
+```
+PATCH /api/auth/profile
+```
+
+Requires authentication.
+
+Updates the authenticated user's display name.
+
+### Request Body
+
+<ParamField body="name" type="string">
+  New display name. Maximum 100 characters. Leading and trailing whitespace is stripped.
+</ParamField>
+
+### Example Request
+
+```bash
+curl -X PATCH https://your-anchor.example.com/api/auth/profile \
+  -H "Authorization: Bearer <access_token>" \
+  -H "Content-Type: application/json" \
+  -d '{"name": "Alice Smith"}'
+```
+
+### Response
+
+Returns the updated user object (same fields as `GET /api/auth/me`).
+
+---
+
+## Upload profile image
+
+```
+POST /api/auth/profile/image
+```
+
+Requires authentication.
+
+Uploads a new profile image. Replaces any existing profile image.
+
+### Request
+
+Send a `multipart/form-data` request with the following field:
+
+<ParamField body="image" type="file" required>
+  The image file to upload. Accepted formats: `image/jpeg`, `image/png`, `image/webp`. Maximum size: **5 MB**.
+</ParamField>
+
+### Example Request
+
+```bash
+curl -X POST https://your-anchor.example.com/api/auth/profile/image \
+  -H "Authorization: Bearer <access_token>" \
+  -F "image=@/path/to/avatar.png"
+```
+
+### Response
+
+Returns the updated user object with the new `profileImage` URL path.
+
+---
+
+## Remove profile image
+
+```
+DELETE /api/auth/profile/image
+```
+
+Requires authentication.
+
+Removes the authenticated user's profile image.
+
+### Example Request
+
+```bash
+curl -X DELETE https://your-anchor.example.com/api/auth/profile/image \
+  -H "Authorization: Bearer <access_token>"
+```
+
+### Response
+
+Returns the updated user object with `profileImage` set to `null`.
+
+---
+
+## Change password
+
+```
+POST /api/auth/change-password
+```
+
+Requires authentication.
+
+<Note>
+  This endpoint is not available for accounts using OIDC authentication. Change your password through your identity provider instead.
+</Note>
+
+### Request Body
+
+<ParamField body="currentPassword" type="string" required>
+  The user's current password.
+</ParamField>
+
+<ParamField body="newPassword" type="string" required>
+  The desired new password. Minimum 8 characters. Must differ from the current password.
+</ParamField>
+
+### Example Request
+
+```bash
+curl -X POST https://your-anchor.example.com/api/auth/change-password \
+  -H "Authorization: Bearer <access_token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "currentPassword": "supersecret123",
+    "newPassword": "evenmoresecret456"
+  }'
+```
+
+### Response
+
+```json
+{ "message": "Password changed successfully" }
+```
+
+---
+
+## Get API token
+
+```
+GET /api/auth/api-token
+```
+
+Requires authentication.
+
+Returns the authenticated user's long-lived API token. This token can be used in place of a JWT access token and does not expire automatically.
+
+### Example Request
+
+```bash
+curl https://your-anchor.example.com/api/auth/api-token \
+  -H "Authorization: Bearer <access_token>"
+```
+
+### Response
+
+<ResponseField name="apiToken" type="string | null">
+  The user's API token, or `null` if one has not been generated or has been revoked.
+</ResponseField>
+
+---
+
+## Regenerate API token
+
+```
+POST /api/auth/api-token/regenerate
+```
+
+Requires authentication.
+
+Generates a new API token, replacing any existing one.
+
+<Warning>
+  Regenerating invalidates the previous API token immediately. Any integrations using the old token must be updated.
+</Warning>
+
+### Example Request
+
+```bash
+curl -X POST https://your-anchor.example.com/api/auth/api-token/regenerate \
+  -H "Authorization: Bearer <access_token>"
+```
+
+### Response
+
+<ResponseField name="apiToken" type="string">
+  The newly generated API token.
+</ResponseField>
+
+---
+
+## Revoke API token
+
+```
+DELETE /api/auth/api-token
+```
+
+Requires authentication.
+
+Revokes the authenticated user's API token. The token is cleared and can no longer be used for authentication.
+
+### Example Request
+
+```bash
+curl -X DELETE https://your-anchor.example.com/api/auth/api-token \
+  -H "Authorization: Bearer <access_token>"
+```
+
+### Response
+
+```json
+{ "apiToken": null }
+```

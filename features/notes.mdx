@@ -1,0 +1,130 @@
+---
+title: "Notes"
+description: "Create, edit, organize, and manage notes in Anchor"
+---
+
+Notes are the core unit of Anchor. Every note has a title, optional rich text content, and a set of properties that control how it appears and where it lives in your workspace.
+
+<CardGroup cols={2}>
+  <Card title="Rich Text Editing" icon="pen-to-square">
+    Format your notes with bold, italic, underline, headings, lists, and checkboxes using a full rich text editor.
+  </Card>
+  <Card title="Pin & Archive" icon="thumbtack">
+    Pin critical notes to the top of your list or archive notes you want to keep but don't need daily.
+  </Card>
+  <Card title="Trash & Recovery" icon="trash">
+    Deleted notes move to the trash first, giving you a recovery window before permanent removal.
+  </Card>
+  <Card title="Bulk Operations" icon="list-check">
+    Select multiple notes and delete or archive them all at once.
+  </Card>
+  <Card title="Note Backgrounds" icon="palette">
+    Differentiate notes visually with solid color backgrounds or decorative patterns.
+  </Card>
+  <Card title="Fast Local Search" icon="magnifying-glass">
+    Search your notes by title or content instantly — search runs against the local database with no server round-trip.
+  </Card>
+</CardGroup>
+
+## Creating a Note
+
+<Steps>
+  <Step title="Open the new note dialog">
+    Tap or click the **New Note** button in the top bar or note list.
+  </Step>
+  <Step title="Enter a title">
+    Every note requires a non-empty title. The title appears in the note list and is included in search results.
+  </Step>
+  <Step title="Add content">
+    The body is an optional rich text field. Use the toolbar to apply formatting as you write.
+  </Step>
+  <Step title="Save">
+    Notes are saved automatically as you type. Changes are written to the local database immediately and synced to the server when the device is online.
+  </Step>
+</Steps>
+
+## Rich Text Formatting
+
+The note editor supports the following inline and block-level formatting:
+
+| Format | Description |
+|---|---|
+| **Bold** | Emphasize key words or phrases |
+| *Italic* | Indicate titles, terms, or emphasis |
+| Underline | Highlight important passages |
+| Heading 1 | Top-level section heading |
+| Heading 2 | Sub-section heading |
+| Heading 3 | Tertiary heading |
+| Ordered list | Numbered sequence of items |
+| Unordered list | Bullet-point list of items |
+| Checkbox list | Interactive task checklist — tap a checkbox to mark it done |
+
+## Note Backgrounds
+
+Each note can have an optional background applied to make it visually distinct in the note list. Choose from a range of **solid colors** or **decorative patterns**. The background is stored in the `background` field on the note and renders both in the list view and when the note is open.
+
+To change a note's background, open the note options menu and select **Background**.
+
+## Pinning Notes
+
+Pinned notes always appear at the top of the active notes list, above unpinned notes. Pinning is a toggle — tap or click the pin icon on any note to pin or unpin it.
+
+Pinned notes remain pinned across devices after the next sync.
+
+## Archiving Notes
+
+Archiving moves a note out of the main list and into the **Archive** view. Archived notes are not deleted — they remain fully accessible and searchable from the Archive section.
+
+Use archiving for notes you want to preserve for reference but no longer need in your active workspace.
+
+- Access archived notes via **Archive** in the sidebar or bottom navigation.
+- Unarchive a note at any time to return it to the active list.
+- Bulk-archive multiple notes at once by selecting them and choosing **Archive**.
+
+## Deleting Notes
+
+Deleting a note performs a **soft delete**: the note moves to the **Trash** with a `trashed` state. From the Trash you can:
+
+- **Restore** the note, returning it to its previous state.
+- **Permanently delete** the note, which removes it irreversibly from the database (`deleted` state).
+
+<Warning>
+Permanent deletion cannot be undone. Once a note is permanently deleted, its content is gone and cannot be recovered.
+</Warning>
+
+### Bulk Delete
+
+Select multiple notes from the note list and choose **Delete** to move them all to the trash in a single operation. This calls `POST /api/notes/bulk/delete` with the list of note IDs.
+
+## Note States
+
+Every note has a `state` field with one of three values, defined by the `NoteState` enum in the database schema:
+
+| State | Meaning |
+|---|---|
+| `active` | Normal, visible note in the main list |
+| `trashed` | Soft-deleted; visible in Trash, recoverable |
+| `deleted` | Permanently deleted; no longer accessible |
+
+## Searching Notes
+
+Search runs locally against the on-device database, so results appear instantly with no network requirement. The search query is matched against both the note **title** and **content**.
+
+To filter by tag at the same time, combine the `search` query with a `tagId` parameter — the API endpoint `GET /api/notes` accepts both.
+
+## API Reference
+
+| Method | Endpoint | Description |
+|---|---|---|
+| `POST` | `/api/notes` | Create a note |
+| `GET` | `/api/notes` | List active notes (supports `search`, `tagId`, `limit`) |
+| `GET` | `/api/notes/trash` | List trashed notes |
+| `GET` | `/api/notes/archive` | List archived notes |
+| `GET` | `/api/notes/:id` | Get a single note |
+| `PATCH` | `/api/notes/:id` | Update a note |
+| `PATCH` | `/api/notes/:id/restore` | Restore a trashed note |
+| `DELETE` | `/api/notes/:id` | Soft-delete (move to trash) |
+| `DELETE` | `/api/notes/:id/permanent` | Permanently delete a note |
+| `POST` | `/api/notes/bulk/delete` | Bulk soft-delete |
+| `POST` | `/api/notes/bulk/archive` | Bulk archive |
+| `POST` | `/api/notes/sync` | Sync local changes to the server |

@@ -1,0 +1,172 @@
+---
+title: "Admin Settings"
+description: "Manage registration mode and OIDC authentication configuration."
+---
+
+All endpoints on this page require admin authentication — the authenticated user must have `isAdmin: true`.
+
+---
+
+## Registration Settings
+
+Anchors's registration mode controls how new users can join the instance.
+
+| Mode | Behavior |
+|---|---|
+| `enabled` | Anyone can create an account and immediately log in. |
+| `disabled` | Self-registration is closed. Admins must create accounts manually. |
+| `review` | New registrations are accepted but require admin approval before the user can log in. |
+
+### Get Registration Settings
+
+Returns the current registration mode.
+
+```
+GET /api/admin/settings/registration
+```
+
+```bash
+curl https://your-anchor-instance.com/api/admin/settings/registration \
+  -H "Authorization: Bearer <token>"
+```
+
+```json Response
+{
+  "mode": "enabled"
+}
+```
+
+### Update Registration Mode
+
+Changes the registration mode for the instance.
+
+```
+PATCH /api/admin/settings/registration
+```
+
+#### Request Body
+
+<ParamField body="mode" type="string" required>
+  The new registration mode. Must be one of `enabled`, `disabled`, or `review`.
+</ParamField>
+
+#### Response
+
+Returns the updated registration settings object.
+
+<ResponseField name="mode" type="string">
+  The current registration mode: `enabled`, `disabled`, or `review`.
+</ResponseField>
+
+```bash
+curl -X PATCH https://your-anchor-instance.com/api/admin/settings/registration \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{ "mode": "review" }'
+```
+
+```json Response
+{
+  "mode": "review"
+}
+```
+
+---
+
+## OIDC Settings
+
+Configure OpenID Connect (OIDC) to enable single sign-on with an external identity provider.
+
+### Get OIDC Settings
+
+Returns the current OIDC configuration.
+
+```
+GET /api/admin/settings/oidc
+```
+
+```bash
+curl https://your-anchor-instance.com/api/admin/settings/oidc \
+  -H "Authorization: Bearer <token>"
+```
+
+```json Response
+{
+  "enabled": false,
+  "providerName": null,
+  "issuerUrl": null,
+  "clientId": null,
+  "clientSecret": null,
+  "disableInternalAuth": false
+}
+```
+
+### Update OIDC Settings
+
+Updates the OIDC configuration. All fields are optional — only the fields you provide will be changed.
+
+```
+PATCH /api/admin/settings/oidc
+```
+
+#### Request Body
+
+<ParamField body="enabled" type="boolean">
+  Whether OIDC authentication is enabled.
+</ParamField>
+
+<ParamField body="providerName" type="string">
+  A display name for the identity provider shown on the login page (e.g., `"Google"`, `"Okta"`).
+</ParamField>
+
+<ParamField body="issuerUrl" type="string">
+  The OIDC issuer URL of the identity provider (must be a valid URL).
+</ParamField>
+
+<ParamField body="clientId" type="string">
+  The client ID registered with the identity provider.
+</ParamField>
+
+<ParamField body="clientSecret" type="string">
+  The client secret registered with the identity provider.
+</ParamField>
+
+<ParamField body="clearClientSecret" type="boolean">
+  Set to `true` to clear the stored client secret without setting a new one.
+</ParamField>
+
+<ParamField body="disableInternalAuth" type="boolean">
+  When `true`, disables email/password login, requiring all users to authenticate via OIDC.
+</ParamField>
+
+<Warning>
+  Setting `disableInternalAuth: true` will prevent all users (including admins) from logging in with a password. Ensure your OIDC configuration is fully working before enabling this option.
+</Warning>
+
+#### Response
+
+Returns the updated OIDC settings object.
+
+```bash
+curl -X PATCH https://your-anchor-instance.com/api/admin/settings/oidc \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "enabled": true,
+    "providerName": "Google",
+    "issuerUrl": "https://accounts.google.com",
+    "clientId": "my-client-id",
+    "clientSecret": "my-client-secret"
+  }'
+```
+
+```json Response
+{
+  "enabled": true,
+  "providerName": "Google",
+  "issuerUrl": "https://accounts.google.com",
+  "clientId": "my-client-id",
+  "clientSecret": "my-client-secret",
+  "disableInternalAuth": false
+}
+```

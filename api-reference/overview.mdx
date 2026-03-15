@@ -1,0 +1,81 @@
+---
+title: "API Overview"
+description: "Anchor REST API — authentication, notes, tags, sharing, and admin endpoints"
+---
+
+## Base URL
+
+All API endpoints are relative to your Anchor instance:
+
+```
+http://your-anchor-instance:3000
+```
+
+## Authentication
+
+Most endpoints require a valid JWT access token passed in the `Authorization` header:
+
+```
+Authorization: Bearer <access_token>
+```
+
+Obtain an `access_token` by calling [`POST /api/auth/login`](/api-reference/auth/login) or [`POST /api/auth/register`](/api-reference/auth/register).
+
+### API Token (long-lived)
+
+For integrations that need persistent access without token rotation, you can use a long-lived API token:
+
+1. Obtain your API token via `GET /api/auth/api-token`
+2. Send it in the same `Authorization` header:
+
+```
+Authorization: Bearer <api_token>
+```
+
+API tokens do not expire automatically but can be regenerated or revoked at any time.
+
+## Request Format
+
+- Set `Content-Type: application/json` for all requests with a JSON body
+- Use `Content-Type: multipart/form-data` for file upload endpoints (e.g. profile image)
+- All responses are JSON
+
+## Example Request
+
+```bash
+curl https://your-anchor.example.com/api/notes \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+```
+
+## Error Responses
+
+The API uses standard HTTP status codes. Error responses include a JSON body with details:
+
+| Status | Meaning |
+|--------|---------|
+| `400` | Bad Request — invalid or missing parameters |
+| `401` | Unauthorized — missing or invalid token |
+| `403` | Forbidden — authenticated but not permitted |
+| `404` | Not Found |
+| `409` | Conflict — resource already exists |
+| `500` | Internal Server Error |
+
+## Endpoint Groups
+
+<CardGroup cols={2}>
+  <Card title="Authentication" href="/api-reference/auth/login">
+    Register, log in, manage tokens, and update your profile.
+  </Card>
+  <Card title="Notes" href="/api-reference/notes/list">
+    Create, read, update, delete, pin, archive, and trash notes.
+  </Card>
+  <Card title="Tags" href="/api-reference/tags/list">
+    Create and manage tags to organize your notes.
+  </Card>
+  <Card title="Note Sharing" href="/api-reference/shares/share-note">
+    Share notes with other users and manage permissions.
+  </Card>
+  <Card title="Admin" href="/api-reference/admin/stats">
+    Instance statistics, user management, and settings (admin only).
+  </Card>
+</CardGroup>

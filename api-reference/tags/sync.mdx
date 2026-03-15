@@ -1,0 +1,145 @@
+---
+title: Sync tags
+description: Push a batch of local tag changes to the server. Follows the same offline-first sync pattern as notes sync.
+---
+
+The tags sync endpoint allows clients to push local tag mutations to the server in a single batch. It follows the same offline-first pattern as [Sync notes](/api-reference/notes/sync): clients accumulate local creates, updates, and deletes, then push them when online.
+
+<Note>
+  Sync tags before syncing notes if your client creates new tags locally. This ensures the server has the tag records before you reference their IDs in note sync payloads.
+</Note>
+
+## How tag sync works
+
+1. The client tracks tag changes (creates, renames, color updates, deletions) locally.
+2. On sync, the client sends `lastSyncedAt` and a `changes` array.
+3. The server applies the changes and returns the current state of all tags updated since `lastSyncedAt`.
+4. The client merges the response and updates its `lastSyncedAt`.
+
+## Request body
+
+<ParamField body="lastSyncedAt" type="string">
+  ISO 8601 timestamp of the last successful tag sync. Omit on the first sync to retrieve all tags.
+</ParamField>
+
+<ParamField body="changes" type="object[]">
+  Array of tag changes to apply to the server.
+
+  <Expandable title="Tag change properties">
+    <ParamField body="id" type="string" required>
+      Tag UUID. Clients should generate UUIDs locally for new tags.
+    </ParamField>
+    <ParamField body="name" type="string" required>
+      Tag name.
+    </ParamField>
+    <ParamField body="color" type="string">
+      Color identifier or hex value.
+    </ParamField>
+    <ParamField body="updatedAt" type="string">
+      ISO 8601 timestamp of when the client last modified this tag. Used for conflict resolution.
+    </ParamField>
+    <ParamField body="isDeleted" type="boolean">
+      Set to `true` to soft-delete the tag on the server.
+    </ParamField>
+  </Expandable>
+</ParamField>
+
+## Response
+
+Returns the server's current state of tags updated since `lastSyncedAt`, including the changes just applied.
+
+<ResponseField name="[]" type="object[]">
+  <Expandable title="Tag properties">
+    <ResponseField name="id" type="string" required>
+      Tag UUID.
+    </ResponseField>
+    <ResponseField name="name" type="string" required>
+      Tag name.
+    </ResponseField>
+    <ResponseField name="color" type="string">
+      Color identifier. `null` if not set.
+    </ResponseField>
+    <ResponseField name="isDeleted" type="boolean" required>
+      Whether the tag has been soft-deleted.
+    </ResponseField>
+    <ResponseField name="createdAt" type="string" required>
+      ISO 8601 creation timestamp.
+    </ResponseField>
+    <ResponseField name="updatedAt" type="string" required>
+      ISO 8601 timestamp of the last update.
+    </ResponseField>
+    <ResponseField name="userId" type="string" required>
+      ID of the owning user.
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<RequestExample>
+
+```bash cURL
+curl --request POST \
+  --url 'https://anchor.example.com/api/tags/sync' \
+  --header 'Authorization: Bearer <token>' \
+  --header 'Content-Type: application/json' \
+  --data '{
+    "lastSyncedAt": "2024-03-10T08:00:00.000Z",
+    "changes": [
+      {
+        "id": "new-local-tag-uuid",
+        "name": "reading",
+        "color": "#F59E0B",
+        "updatedAt": "2024-03-15T09:00:00.000Z"
+      },
+      {
+        "id": "tag-uuid-1",
+        "name": "work",
+        "color": "#EF4444",
+        "updatedAt": "2024-03-15T09:30:00.000Z"
+      },
+      {
+        "id": "tag-uuid-old",
+        "name": "obsolete",
+        "isDeleted": true,
+        "updatedAt": "2024-03-15T09:45:00.000Z"
+      }
+    ]
+  }'
+```
+
+</RequestExample>
+
+<ResponseExample>
+
+```json 200
+[
+  {
+    "id": "new-local-tag-uuid",
+    "name": "reading",
+    "color": "#F59E0B",
+    "isDeleted": false,
+    "createdAt": "2024-03-15T09:00:00.000Z",
+    "updatedAt": "2024-03-15T09:00:00.000Z",
+    "userId": "user-uuid-here"
+  },
+  {
+    "id": "tag-uuid-1",
+    "name": "work",
+    "color": "#EF4444",
+    "isDeleted": false,
+    "createdAt": "2024-01-10T09:00:00.000Z",
+    "updatedAt": "2024-03-15T09:30:00.000Z",
+    "userId": "user-uuid-here"
+  },
+  {
+    "id": "tag-uuid-old",
+    "name": "obsolete",
+    "color": null,
+    "isDeleted": true,
+    "createdAt": "2024-01-05T10:00:00.000Z",
+    "updatedAt": "2024-03-15T09:45:00.000Z",
+    "userId": "user-uuid-here"
+  }
+]
+```
+
+</ResponseExample>

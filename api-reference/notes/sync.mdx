@@ -1,0 +1,137 @@
+---
+title: Sync notes
+description: Push a batch of local note changes to the server and receive the current server state. The core endpoint for offline-first sync.
+---
+
+The sync endpoint is the primary mechanism used by Anchor clients (web, mobile, desktop) to reconcile local changes with the server. It follows an **offline-first** pattern: clients accumulate changes locally while offline, then push them in a single batch when connectivity is restored.
+
+## How offline-first sync works
+
+<Note>
+  Clients should store a `lastSyncedAt` timestamp after each successful sync. On the next sync, send this timestamp so the server can return only the records that changed since then.
+</Note>
+
+1. The client tracks all creates, updates, and deletes locally while the user works (online or offline).
+2. When online, the client calls `POST /api/notes/sync` with:
+   - `lastSyncedAt` — the timestamp of the previous successful sync.
+   - `changes` — the batch of local mutations to apply.
+3. The server applies the changes and returns the full current state of notes modified since `lastSyncedAt`.
+4. The client merges the server response into its local store and updates `lastSyncedAt`.
+
+Each entry in `changes` carries an `updatedAt` timestamp from the client. The server uses this for conflict resolution — the most recently updated version wins.
+
+## Request body
+
+<ParamField body="lastSyncedAt" type="string">
+  ISO 8601 timestamp of the last successful sync. When provided, the server returns notes updated after this point. Omit on the first sync to receive all notes.
+</ParamField>
+
+<ParamField body="changes" type="object[]">
+  Array of note changes to apply. Each object represents a single note to create, update, or delete on the server.
+
+  <Expandable title="Change object properties">
+    <ParamField body="id" type="string" required>
+      Note UUID. Must be a valid UUID — clients should generate UUIDs locally for new notes.
+    </ParamField>
+    <ParamField body="title" type="string" required>
+      Note title.
+    </ParamField>
+    <ParamField body="content" type="string">
+      Rich text HTML content.
+    </ParamField>
+    <ParamField body="isPinned" type="boolean">
+      Whether the note is pinned.
+    </ParamField>
+    <ParamField body="isArchived" type="boolean">
+      Whether the note is archived.
+    </ParamField>
+    <ParamField body="background" type="string">
+      Background color or pattern identifier.
+    </ParamField>
+    <ParamField body="state" type="string">
+      Note state. One of `active`, `trashed`, or `deleted`. Set to `trashed` to soft-delete, or `deleted` to signal permanent removal.
+    </ParamField>
+    <ParamField body="tagIds" type="string[]">
+      Array of tag IDs to assign to this note.
+    </ParamField>
+    <ParamField body="updatedAt" type="string" required>
+      ISO 8601 timestamp of when the client last modified this note. Used for conflict resolution.
+    </ParamField>
+  </Expandable>
+</ParamField>
+
+## Response
+
+Returns the server's current state — all notes that have been updated since `lastSyncedAt`, including the changes just applied.
+
+<ResponseField name="notes" type="object[]">
+  Array of Note objects representing the server's current state for the synced user.
+</ResponseField>
+
+<RequestExample>
+
+```bash cURL
+curl --request POST \
+  --url 'https://anchor.example.com/api/notes/sync' \
+  --header 'Authorization: Bearer <token>' \
+  --header 'Content-Type: application/json' \
+  --data '{
+    "lastSyncedAt": "2024-03-10T08:00:00.000Z",
+    "changes": [
+      {
+        "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+        "title": "Updated while offline",
+        "content": "<p>New content added offline</p>",
+        "isPinned": false,
+        "state": "active",
+        "tagIds": ["tag-uuid-1"],
+        "updatedAt": "2024-03-15T09:45:00.000Z"
+      },
+      {
+        "id": "new-local-uuid-here",
+        "title": "Created while offline",
+        "state": "active",
+        "updatedAt": "2024-03-15T10:00:00.000Z"
+      }
+    ]
+  }'
+```
+
+</RequestExample>
+
+<ResponseExample>
+
+```json 200
+[
+  {
+    "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+    "title": "Updated while offline",
+    "content": "<p>New content added offline</p>",
+    "isPinned": false,
+    "isArchived": false,
+    "background": null,
+    "state": "active",
+    "createdAt": "2024-03-01T10:00:00.000Z",
+    "updatedAt": "2024-03-15T09:45:00.000Z",
+    "userId": "user-uuid-here",
+    "tags": [
+      { "id": "tag-uuid-1", "name": "work", "color": null }
+    ]
+  },
+  {
+    "id": "new-local-uuid-here",
+    "title": "Created while offline",
+    "content": null,
+    "isPinned": false,
+    "isArchived": false,
+    "background": null,
+    "state": "active",
+    "createdAt": "2024-03-15T10:00:00.000Z",
+    "updatedAt": "2024-03-15T10:00:00.000Z",
+    "userId": "user-uuid-here",
+    "tags": []
+  }
+]
+```
+
+</ResponseExample>

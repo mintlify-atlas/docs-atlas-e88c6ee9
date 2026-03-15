@@ -1,0 +1,73 @@
+---
+title: "Mobile App Installation"
+description: "Download and install the Anchor Android app"
+---
+
+<Note>
+  The Anchor mobile app is distributed as an Android APK directly from GitHub Releases. It is not available on the Google Play Store.
+</Note>
+
+## Download
+
+All releases are published at [github.com/zhfahim/anchor/releases](https://github.com/zhfahim/anchor/releases). Each release includes multiple APK variants:
+
+| File | Description |
+|------|-------------|
+| `anchor-{version}.apk` | Universal APK — recommended for most devices |
+| Architecture-specific APKs | Smaller downloads targeting a specific CPU (arm64-v8a, armeabi-v7a, x86_64) |
+
+Unless you have a reason to prefer a smaller file, download the universal APK.
+
+## Install on Android
+
+<Steps>
+  <Step title="Download the APK">
+    On your Android device, open [github.com/zhfahim/anchor/releases](https://github.com/zhfahim/anchor/releases) and tap the latest `anchor-{version}.apk` to download it.
+  </Step>
+
+  <Step title="Allow installation from unknown sources">
+    Android blocks APK installations from outside the Play Store by default. You need to grant permission before the install can proceed.
+
+    <Warning>
+      Enabling installation from unknown sources allows apps outside the Play Store to be installed. Only do this for APKs from sources you trust. You can disable the permission again after installation.
+    </Warning>
+
+    The exact steps vary by Android version and manufacturer:
+
+    - **Android 8 and later:** When you open the APK, Android will prompt you to allow your browser or file manager to install unknown apps. Tap **Settings**, toggle **Allow from this source**, then go back and tap **Install**.
+    - **Android 7 and earlier:** Go to **Settings → Security** and enable **Unknown sources**, then open the APK.
+  </Step>
+
+  <Step title="Install the APK">
+    Open the downloaded file from your notifications or file manager and tap **Install**. Once installation completes, tap **Open**.
+  </Step>
+
+  <Step title="Enter your server URL">
+    On first launch, Anchor will ask for the URL of your self-hosted server. Enter the full URL including the scheme, for example:
+
+    ```
+    https://notes.example.com
+    ```
+
+    The URL is stored securely on the device. You can change it later from the login screen by tapping the server chip at the top.
+  </Step>
+
+  <Step title="Sign in">
+    Log in with your Anchor credentials. If your server is configured with an OIDC provider, a **Login with \{Provider\}** button will appear. Tap it to complete authentication through your identity provider.
+  </Step>
+</Steps>
+
+## OIDC Login on Mobile
+
+The mobile app authenticates with OIDC using the **PKCE flow** (public client — no client secret required). After login, the identity provider redirects back to the app using the custom URI scheme:
+
+```
+anchor://oidc/callback
+```
+
+To enable OIDC login on mobile, register this redirect URI in your OIDC provider and configure Anchor as a **public client** (PKCE, no client secret). See your provider's documentation for where to add redirect URIs — for example:
+
+- **Pocket ID / Authelia / Authentik:** Add `anchor://oidc/callback` to the list of allowed redirect URIs for the client.
+- **Keycloak:** Add `anchor://oidc/callback` under **Valid Redirect URIs** for the client, and set the **Access Type** to `public`.
+
+The `OIDC_CLIENT_SECRET` environment variable should be left unset (or empty) when using a public client.

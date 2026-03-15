@@ -1,0 +1,119 @@
+---
+title: "Admin Panel"
+description: "Manage users, registration, and system settings from the admin panel"
+---
+
+The admin panel gives administrators full control over users, registration policy, and authentication settings for a self-hosted Anchor instance.
+
+<Warning>
+The **first user to register** on a new Anchor instance is automatically granted admin status. Secure your instance immediately after the initial setup to prevent unintended admin access.
+</Warning>
+
+## Accessing the Admin Panel
+
+The admin panel is available to any user whose account has `isAdmin: true`. Navigate to **Admin** in the sidebar or header menu. All admin API routes are protected by an `AdminGuard` that rejects non-admin requests with a `403 Forbidden` response.
+
+## System Statistics
+
+The **Stats** page (`GET /api/admin/stats`) provides a real-time snapshot of the instance:
+
+| Stat | Description |
+|---|---|
+| `totalUsers` | Number of registered user accounts |
+| `totalNotes` | Number of notes that have not been permanently deleted |
+| `totalTags` | Total number of tags across all users |
+
+## User Management
+
+### Listing Users
+
+`GET /api/admin/users` returns a paginated list of all users, ordered by creation date (newest first). Each user record includes their email, name, admin status, account status, authentication method (`local` or `oidc`), and counts of their notes and tags.
+
+Pagination is controlled with `skip` and `take` query parameters (default: `skip=0`, `take=50`).
+
+### Creating Users
+
+Admins can create new user accounts directly without going through the normal registration flow. Use the **Create User** form in the admin panel, which calls `POST /api/admin/users` with the user's name, email, and initial password.
+
+### Updating Users
+
+`PATCH /api/admin/users/:id` allows updating a user's name, email, and admin status. Two safety rules are enforced:
+
+- An admin **cannot remove their own admin status**.
+- The **last remaining admin** cannot be demoted — there must always be at least one admin on the instance.
+
+### Deleting Users
+
+`DELETE /api/admin/users/:id` permanently deletes a user and all of their data (notes and tags are cascade-deleted by the database). The last admin account on the instance cannot be deleted.
+
+### Resetting Passwords
+
+`POST /api/admin/users/:id/reset-password` resets a user's password. You can supply a specific `newPassword` in the request body, or leave it empty to have the server generate a secure random 16-character password. If a password is auto-generated, it is returned in the response so you can share it with the user.
+
+### Approving and Rejecting Pending Users
+
+When registration mode is set to `review`, new sign-ups are placed in a `pending` state and cannot log in until an admin acts on them.
+
+- `POST /api/admin/users/:id/approve` — sets the user's status to `active`, allowing them to log in.
+- `POST /api/admin/users/:id/reject` — deletes the pending user record entirely.
+
+View all pending users at `GET /api/admin/users/pending`.
+
+## Registration Control
+
+Admins can control who is allowed to create new accounts on the instance.
+
+<AccordionGroup>
+  <Accordion title="enabled — Open registration">
+    Anyone who can reach the Anchor login page can create a new account. This is suitable for trusted internal networks or family/friend deployments where you want frictionless onboarding.
+  </Accordion>
+  <Accordion title="disabled — No new accounts">
+    The registration form is hidden and the sign-up endpoint rejects all requests. Only existing users and users created directly by an admin can access the instance. Use this to lock down a deployment after the initial setup is complete.
+  </Accordion>
+  <Accordion title="review — Admin approval required">
+    New registrations are accepted but the account is placed in a `pending` state. The user cannot log in until an admin approves the account from the **Pending Users** list in the admin panel. This is useful when you want to allow self-service sign-up but still control who gets in.
+  </Accordion>
+</AccordionGroup>
+
+The registration mode can be set in two ways:
+
+1. **Admin panel**: navigate to **Settings → Registration** and select the desired mode. This calls `PATCH /api/admin/settings/registration`.
+2. **Environment variable**: set `USER_SIGNUP` to `enabled`, `disabled`, or `review` in your `docker-compose.yml`. When the env var is set, it takes precedence and the setting cannot be changed from the admin panel UI.
+
+## OIDC Settings
+
+If you prefer not to configure OIDC via environment variables, you can manage the OIDC provider settings from the admin panel under **Settings → OIDC Authentication**.
+
+`GET /api/admin/settings/oidc` returns the current OIDC configuration. `PATCH /api/admin/settings/oidc` accepts the following fields:
+
+| Field | Description |
+|---|---|
+| `enabled` | Enable or disable OIDC login |
+| `providerName` | Display name shown on the login button |
+| `issuerUrl` | Base URL of your OIDC provider |
+| `clientId` | OIDC client ID |
+| `clientSecret` | OIDC client secret (omit for public/PKCE clients) |
+| `clearClientSecret` | Set to `true` to remove a previously stored client secret |
+| `disableInternalAuth` | Hide the local username/password login form |
+
+<Note>
+Admin UI OIDC settings are only writable when the corresponding environment variables (`OIDC_ENABLED`, `OIDC_ISSUER_URL`, `OIDC_CLIENT_ID`) are **not** all set. If those three env vars are present, they take precedence and the admin UI fields become read-only.
+</Note>
+
+## API Reference
+
+| Method | Endpoint | Description |
+|---|---|---|
+| `GET` | `/api/admin/stats` | System statistics |
+| `GET` | `/api/admin/users` | List all users (paginated) |
+| `GET` | `/api/admin/users/pending` | List pending users |
+| `POST` | `/api/admin/users` | Create a user |
+| `PATCH` | `/api/admin/users/:id` | Update user details |
+| `DELETE` | `/api/admin/users/:id` | Delete a user |
+| `POST` | `/api/admin/users/:id/reset-password` | Reset a user's password |
+| `POST` | `/api/admin/users/:id/approve` | Approve a pending user |
+| `POST` | `/api/admin/users/:id/reject` | Reject and delete a pending user |
+| `GET` | `/api/admin/settings/registration` | Get registration settings |
+| `PATCH` | `/api/admin/settings/registration` | Update registration mode |
+| `GET` | `/api/admin/settings/oidc` | Get OIDC settings |
+| `PATCH` | `/api/admin/settings/oidc` | Update OIDC settings |

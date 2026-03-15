@@ -1,0 +1,55 @@
+---
+title: "Refresh Token"
+description: "Exchange a refresh token for a new access token"
+---
+
+## Endpoint
+
+```
+POST /api/auth/refresh
+```
+
+No authentication required.
+
+<Note>
+  Anchor uses **refresh token rotation**. Each call to this endpoint invalidates the provided refresh token and issues a brand new token pair. Store the new `refresh_token` returned in the response.
+</Note>
+
+## Request Body
+
+<ParamField body="refresh_token" type="string" required>
+  The refresh token received from a previous login or refresh response.
+</ParamField>
+
+## Example Request
+
+```bash
+curl -X POST https://your-anchor.example.com/api/auth/refresh \
+  -H "Content-Type: application/json" \
+  -d '{
+    "refresh_token": "a3f1c2d4e5b6..."
+  }'
+```
+
+## Response
+
+<ResponseField name="access_token" type="string">
+  A new short-lived JWT for authenticating API requests.
+</ResponseField>
+
+<ResponseField name="refresh_token" type="string">
+  A new long-lived refresh token (90 days). The old refresh token is now invalid.
+</ResponseField>
+
+## Example Response
+
+```json
+{
+  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "refresh_token": "b7e2d3f4a5c6..."
+}
+```
+
+<Warning>
+  If the refresh token has expired or does not exist, the endpoint returns `401 Unauthorized`. The user will need to log in again.
+</Warning>

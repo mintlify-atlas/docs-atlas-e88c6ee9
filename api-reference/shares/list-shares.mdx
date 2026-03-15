@@ -1,0 +1,97 @@
+---
+title: "List Note Shares"
+description: "Retrieve all active shares for a specific note."
+---
+
+Returns all shares for a given note, including details about each user the note has been shared with.
+
+```
+GET /api/notes/:id/shares
+```
+
+## Path Parameters
+
+<ParamField path="id" type="string" required>
+  The ID of the note whose shares you want to list.
+</ParamField>
+
+## Response
+
+Returns an array of `NoteShare` objects. Each object includes the `sharedWithUser` details.
+
+<ResponseField name="id" type="string">
+  Unique identifier for the share (UUID).
+</ResponseField>
+
+<ResponseField name="noteId" type="string">
+  The ID of the shared note.
+</ResponseField>
+
+<ResponseField name="sharedWithUserId" type="string">
+  The ID of the user the note is shared with.
+</ResponseField>
+
+<ResponseField name="sharedWithUser" type="object">
+  Details of the user the note is shared with.
+
+  <Expandable title="sharedWithUser fields">
+    <ResponseField name="id" type="string">
+      The user's unique identifier.
+    </ResponseField>
+
+    <ResponseField name="name" type="string">
+      The user's display name.
+    </ResponseField>
+
+    <ResponseField name="email" type="string">
+      The user's email address.
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="permission" type="string">
+  The permission level: `viewer` or `editor`.
+</ResponseField>
+
+<ResponseField name="sharedByUserId" type="string">
+  The ID of the user who created the share.
+</ResponseField>
+
+<ResponseField name="isDeleted" type="boolean">
+  Whether the share has been revoked.
+</ResponseField>
+
+<ResponseField name="createdAt" type="string">
+  ISO 8601 timestamp of when the share was created.
+</ResponseField>
+
+<ResponseField name="updatedAt" type="string">
+  ISO 8601 timestamp of when the share was last updated.
+</ResponseField>
+
+## Example
+
+```bash
+curl https://your-anchor-instance.com/api/notes/NOTE_ID/shares \
+  -H "Authorization: Bearer <token>"
+```
+
+```json Response
+[
+  {
+    "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+    "noteId": "NOTE_ID",
+    "sharedWithUserId": "user_abc123",
+    "sharedWithUser": {
+      "id": "user_abc123",
+      "name": "Jane Smith",
+      "email": "jane@example.com"
+    },
+    "permission": "editor",
+    "sharedByUserId": "user_xyz789",
+    "isDeleted": false,
+    "createdAt": "2026-03-15T10:00:00.000Z",
+    "updatedAt": "2026-03-15T10:00:00.000Z"
+  }
+]
+```

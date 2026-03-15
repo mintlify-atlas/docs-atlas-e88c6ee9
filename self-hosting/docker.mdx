@@ -1,0 +1,117 @@
+---
+title: "Docker Deployment"
+description: "Deploy Anchor on your own infrastructure using Docker"
+---
+
+Anchor ships as a single Docker image that bundles the web frontend, API server, and an embedded PostgreSQL database. You can be up and running in minutes with no external dependencies.
+
+<Tabs>
+  <Tab title="Option 1: Pre-built image (recommended)">
+    <Steps>
+      <Step title="Create a docker-compose.yml file">
+        Create a new file named `docker-compose.yml` with the following content:
+
+        ```yaml
+        services:
+          anchor:
+            image: ghcr.io/zhfahim/anchor:latest
+            container_name: anchor
+            restart: unless-stopped
+            ports:
+              - "3000:3000"
+            volumes:
+              - anchor_data:/data
+
+        volumes:
+          anchor_data:
+        ```
+
+        The `anchor_data` volume persists all application data — the embedded database, generated secrets, and uploaded content — across container restarts and upgrades.
+      </Step>
+
+      <Step title="Start the container">
+        ```bash
+        docker compose up -d
+        ```
+      </Step>
+
+      <Step title="Access the app">
+        Open [http://localhost:3000](http://localhost:3000) in your browser. On first launch, create your admin account through the registration page.
+      </Step>
+    </Steps>
+  </Tab>
+
+  <Tab title="Option 2: Build from source">
+    Use this option if you want to customize the image or run the latest unreleased code.
+
+    <Steps>
+      <Step title="Clone the repository">
+        ```bash
+        git clone https://github.com/zhfahim/anchor.git
+        cd anchor
+        ```
+      </Step>
+
+      <Step title="Start the container">
+        The `docker-compose.yml` in the repository is configured to build the image from source automatically:
+
+        ```bash
+        docker compose up -d
+        ```
+
+        The initial build compiles the Next.js frontend and NestJS backend, which may take a few minutes.
+      </Step>
+
+      <Step title="Access the app">
+        Open [http://localhost:3000](http://localhost:3000) in your browser. On first launch, create your admin account through the registration page.
+      </Step>
+    </Steps>
+  </Tab>
+</Tabs>
+
+## Port mapping
+
+Anchor listens on port `3000` inside the container. The default `3000:3000` mapping exposes it on the same port of the host machine. To serve on a different host port, change the left side of the mapping:
+
+```yaml
+ports:
+  - "8080:3000"  # Access at http://localhost:8080
+```
+
+## Persistent data
+
+All stateful data is stored under `/data` inside the container:
+
+| Path | Contents |
+|------|----------|
+| `/data/postgres/` | Embedded PostgreSQL data files |
+| `/data/.jwt_secret` | Auto-generated JWT signing secret |
+
+The named volume `anchor_data` is mounted to `/data` and survives container restarts and removals. Do not delete this volume unless you intend to wipe all application data.
+
+## Updating to a new version
+
+To pull the latest image and restart the container:
+
+```bash
+docker compose pull
+docker compose up -d
+```
+
+Anchor runs Prisma migrations automatically on every startup, so the database schema is updated without any manual steps.
+
+## Health check
+
+The container includes a built-in health check that polls the API at `http://localhost:3000/api/health` every 30 seconds. To inspect the current status:
+
+```bash
+docker inspect --format='{{.State.Health.Status}}' anchor
+```
+
+You can also follow the container logs in real time:
+
+```bash
+docker compose logs -f anchor
+```
+
+The container is healthy and ready to serve traffic once you see log lines from both the `api` and `web` processes.

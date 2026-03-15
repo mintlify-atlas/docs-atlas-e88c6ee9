@@ -1,0 +1,84 @@
+---
+title: List trashed notes
+description: Retrieve all notes currently in the trash for the authenticated user.
+---
+
+Returns all notes with a state of `trashed` belonging to the authenticated user. Trashed notes can be restored using the [restore endpoint](/api-reference/notes/delete) or permanently deleted.
+
+<Note>
+  Trashed notes are not returned by [List notes](/api-reference/notes/list). Use this endpoint to display the trash view in your application.
+</Note>
+
+## Response
+
+Returns an array of Note objects with `state: "trashed"`.
+
+<ResponseField name="[]" type="object[]">
+  <Expandable title="Note properties" defaultOpen>
+    <ResponseField name="id" type="string" required>
+      Unique identifier (UUID).
+    </ResponseField>
+    <ResponseField name="title" type="string" required>
+      Note title.
+    </ResponseField>
+    <ResponseField name="content" type="string">
+      Rich text HTML content. `null` if not set.
+    </ResponseField>
+    <ResponseField name="isPinned" type="boolean" required>
+      Whether the note is pinned.
+    </ResponseField>
+    <ResponseField name="isArchived" type="boolean" required>
+      Whether the note is archived.
+    </ResponseField>
+    <ResponseField name="background" type="string">
+      Background color or pattern identifier. `null` if not set.
+    </ResponseField>
+    <ResponseField name="state" type="string" required>
+      Always `trashed` for notes returned by this endpoint.
+    </ResponseField>
+    <ResponseField name="createdAt" type="string" required>
+      ISO 8601 creation timestamp.
+    </ResponseField>
+    <ResponseField name="updatedAt" type="string" required>
+      ISO 8601 timestamp of the last update.
+    </ResponseField>
+    <ResponseField name="userId" type="string" required>
+      ID of the owning user.
+    </ResponseField>
+    <ResponseField name="tags" type="object[]" required>
+      Tags assigned to this note.
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<RequestExample>
+
+```bash cURL
+curl --request GET \
+  --url 'https://anchor.example.com/api/notes/trash' \
+  --header 'Authorization: Bearer <token>'
+```
+
+</RequestExample>
+
+<ResponseExample>
+
+```json 200
+[
+  {
+    "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+    "title": "Old draft",
+    "content": null,
+    "isPinned": false,
+    "isArchived": false,
+    "background": null,
+    "state": "trashed",
+    "createdAt": "2024-02-10T08:00:00.000Z",
+    "updatedAt": "2024-03-12T16:00:00.000Z",
+    "userId": "user-uuid-here",
+    "tags": []
+  }
+]
+```
+
+</ResponseExample>

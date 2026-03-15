@@ -1,0 +1,122 @@
+---
+title: "OIDC Authentication"
+description: "Configure OpenID Connect (OIDC) single sign-on for Anchor"
+---
+
+Anchor supports OpenID Connect (OIDC) authentication for simplified credential management and streamlined multi-user deployments. Users can sign in with any standard OIDC provider, and accounts are created or linked automatically on first login.
+
+## Features
+
+- Support for standard OIDC providers: Pocket ID, Authelia, Authentik, Keycloak, and others
+- Configuration via environment variables or the admin settings UI
+- OIDC-only mode: disable local username/password login entirely
+- Support for public OIDC clients (PKCE — no client secret required)
+- Auto-create users on first login (respects the registration mode setting)
+- Auto-link existing local accounts by email address
+
+## Callback URLs
+
+Before configuring Anchor, register the following redirect/callback URIs with your OIDC provider:
+
+| Client | Callback URL |
+|---|---|
+| Web | `{APP_URL}/api/auth/oidc/callback` |
+| Mobile | `anchor://oidc/callback` |
+
+For example, if your Anchor instance is at `https://notes.example.com`, the web callback URL is:
+
+```
+https://notes.example.com/api/auth/oidc/callback
+```
+
+<Note>
+  The mobile app uses PKCE (public client) and does not require a client secret. Configure Anchor as a **public client** in your OIDC provider and add `anchor://oidc/callback` as an allowed redirect URI.
+</Note>
+
+## Configuration
+
+<Tabs>
+  <Tab title="Environment Variables">
+    Set the following variables in your `docker-compose.yml` (or any other environment source). When `OIDC_ENABLED`, `OIDC_ISSUER_URL`, and `OIDC_CLIENT_ID` are all present, the environment configuration takes precedence and the admin UI settings are locked.
+
+    | Variable | Required | Default | Description |
+    |---|---|---|---|
+    | `OIDC_ENABLED` | Yes | — | Set to `true` to enable OIDC |
+    | `OIDC_PROVIDER_NAME` | No | `"OIDC Provider"` | Display name shown on the login button |
+    | `OIDC_ISSUER_URL` | Yes | — | Base URL of your OIDC provider |
+    | `OIDC_CLIENT_ID` | Yes | — | Client ID registered with your OIDC provider |
+    | `OIDC_CLIENT_SECRET` | No | — | Client secret. Omit for public/PKCE clients |
+    | `DISABLE_INTERNAL_AUTH` | No | `false` | Hide the local login form (OIDC-only mode) |
+    | `APP_URL` | No | `http://localhost:3000` | Base URL where Anchor is served (used to build the callback URL) |
+
+    **Pocket ID example:**
+
+    ```yaml
+    services:
+      anchor:
+        image: ghcr.io/zhfahim/anchor:latest
+        environment:
+          - OIDC_ENABLED=true
+          - OIDC_PROVIDER_NAME=Pocket ID
+          - OIDC_ISSUER_URL=https://pocketid.example.com
+          - OIDC_CLIENT_ID=your-client-id
+          - OIDC_CLIENT_SECRET=your-client-secret  # Optional for public clients
+          - DISABLE_INTERNAL_AUTH=false
+          - APP_URL=https://notes.example.com
+    ```
+  </Tab>
+
+  <Tab title="Admin UI">
+    When the three environment variables (`OIDC_ENABLED`, `OIDC_ISSUER_URL`, `OIDC_CLIENT_ID`) are **not** all set, OIDC can be configured through the admin panel without restarting the server.
+
+    1. Sign in as an admin.
+    2. Navigate to **Settings** → **OIDC Authentication**.
+    3. Fill in the provider name, issuer URL, client ID, and optionally the client secret.
+    4. Toggle **Enable OIDC** and save.
+
+    Changes take effect immediately. The UI also shows whether the configuration is currently locked by environment variables.
+  </Tab>
+</Tabs>
+
+<Warning>
+  Setting `DISABLE_INTERNAL_AUTH=true` hides the local email/password login form entirely. Before enabling this, make sure at least one user can sign in via OIDC — otherwise you may be locked out of the instance. Existing local accounts are not deleted; they simply cannot be used to log in while internal auth is disabled.
+</Warning>
+
+## Supported Providers
+
+Anchor works with any standard OpenID Connect provider. The following are known to work well:
+
+<CardGroup cols={2}>
+  <Card title="Pocket ID" icon="id-card">
+    A lightweight, self-hostable OIDC provider. Supports both confidential and public (PKCE) clients.
+  </Card>
+  <Card title="Authelia" icon="shield">
+    An open-source authentication and authorization server supporting OIDC, 2FA, and SSO.
+  </Card>
+  <Card title="Authentik" icon="lock">
+    A flexible self-hosted identity provider with a rich admin UI and support for many authentication flows.
+  </Card>
+  <Card title="Keycloak" icon="key">
+    A widely-used enterprise-grade open-source identity and access management solution.
+  </Card>
+</CardGroup>
+
+## How It Works
+
+The OIDC login flow for the web app follows the Authorization Code + PKCE flow:
+
+1. The user clicks the OIDC login button. The browser is redirected to `GET /api/auth/oidc/initiate`.
+2. Anchor generates a PKCE code challenge and a CSRF state token, then redirects the browser to the OIDC provider's authorization endpoint.
+3. After the user authenticates, the provider redirects back to `{APP_URL}/api/auth/oidc/callback` with an authorization code.
+4. Anchor exchanges the code for tokens, fetches user info from the provider, and finds or creates the matching Anchor account.
+5. A short-lived one-time exchange code is issued and the browser is redirected to the frontend login page with that code.
+6. The frontend exchanges the code (`POST /api/auth/oidc/exchange`) for an Anchor access token and refresh token.
+
+For the **mobile app**, the flow is handled natively by the Flutter client using PKCE. After the IdP access token is obtained on-device, the mobile app exchanges it for Anchor tokens via `POST /api/auth/oidc/exchange/mobile`.
+
+### User provisioning
+
+On first login:
+- If a local account with the same email already exists, it is linked to the OIDC identity automatically.
+- If no account exists, a new one is created (subject to the registration mode — if registration is `disabled`, login is rejected).
+- The OIDC provider must return `email` and `sub` claims. The `name` claim (or `preferred_username`, or the email prefix) is used as the display name.

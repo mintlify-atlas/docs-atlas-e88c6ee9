@@ -1,0 +1,94 @@
+---
+title: "Share a Note"
+description: "Share a note with another user by granting them viewer or editor access."
+---
+
+Shares a note with a specified user. The authenticated user must be the owner of the note.
+
+```
+POST /api/notes/:id/shares
+```
+
+<Note>
+  You must be the owner of the note to share it. Sharing with a user who already has an active share on the note will return a conflict error.
+</Note>
+
+## Path Parameters
+
+<ParamField path="id" type="string" required>
+  The ID of the note to share.
+</ParamField>
+
+## Request Body
+
+<ParamField body="sharedWithUserId" type="string" required>
+  The ID of the user to share the note with.
+</ParamField>
+
+<ParamField body="permission" type="string" required>
+  The permission level to grant. Must be one of `viewer` or `editor`.
+
+  - `viewer` — the user can read the note but cannot make changes
+  - `editor` — the user can read and edit the note
+</ParamField>
+
+## Response
+
+Returns the created `NoteShare` object.
+
+<ResponseField name="id" type="string">
+  Unique identifier for the share (UUID).
+</ResponseField>
+
+<ResponseField name="noteId" type="string">
+  The ID of the shared note.
+</ResponseField>
+
+<ResponseField name="sharedWithUserId" type="string">
+  The ID of the user the note was shared with.
+</ResponseField>
+
+<ResponseField name="permission" type="string">
+  The granted permission level: `viewer` or `editor`.
+</ResponseField>
+
+<ResponseField name="sharedByUserId" type="string">
+  The ID of the user who created the share.
+</ResponseField>
+
+<ResponseField name="isDeleted" type="boolean">
+  Whether the share has been revoked. Always `false` for a newly created share.
+</ResponseField>
+
+<ResponseField name="createdAt" type="string">
+  ISO 8601 timestamp of when the share was created.
+</ResponseField>
+
+<ResponseField name="updatedAt" type="string">
+  ISO 8601 timestamp of when the share was last updated.
+</ResponseField>
+
+## Example
+
+```bash
+curl -X POST https://your-anchor-instance.com/api/notes/NOTE_ID/shares \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "sharedWithUserId": "user_abc123",
+    "permission": "editor"
+  }'
+```
+
+```json Response
+{
+  "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  "noteId": "NOTE_ID",
+  "sharedWithUserId": "user_abc123",
+  "permission": "editor",
+  "sharedByUserId": "user_xyz789",
+  "isDeleted": false,
+  "createdAt": "2026-03-15T10:00:00.000Z",
+  "updatedAt": "2026-03-15T10:00:00.000Z"
+}
+```

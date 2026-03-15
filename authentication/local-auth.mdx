@@ -1,0 +1,222 @@
+---
+title: "Local Authentication"
+description: "Username and password authentication for Anchor"
+---
+
+Local authentication in Anchor uses email and password credentials secured with JSON Web Tokens (JWT). On login, the server issues two tokens: a short-lived **access token** used to authenticate API requests, and a long-lived **refresh token** (valid for 90 days) stored in the database and used to obtain new access tokens without re-entering credentials.
+
+## Registration
+
+Any visitor can create an account via `POST /api/auth/register` with a name, email address, and a password of at least 8 characters.
+
+**First user becomes admin.** When no admin account exists yet, the very first registered user is automatically granted admin privileges.
+
+Whether registration is open, gated, or closed is controlled by the registration mode (see [Registration Modes](#registration-modes) below).
+
+```bash
+POST /api/auth/register
+Content-Type: application/json
+
+{
+  "name": "Ada Lovelace",
+  "email": "ada@example.com",
+  "password": "mypassword"
+}
+```
+
+**Response (active account):** Returns `access_token`, `refresh_token`, and the user object.
+
+**Response (pending account):** When registration mode is `review`, the account is created with `status: pending` and no tokens are issued until an admin approves the account.
+
+## Login Flow
+
+<Steps>
+  <Step title="Submit credentials">
+    Send a `POST /api/auth/login` request with `email` and `password`.
+
+    ```bash
+    POST /api/auth/login
+    Content-Type: application/json
+
+    {
+      "email": "ada@example.com",
+      "password": "mypassword"
+    }
+    ```
+  </Step>
+
+  <Step title="Receive tokens">
+    On success the server returns an access token and a refresh token.
+
+    ```json
+    {
+      "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+      "refresh_token": "a3f8c2d1...",
+      "user": {
+        "id": "clxyz123",
+        "email": "ada@example.com",
+        "name": "Ada Lovelace",
+        "isAdmin": false,
+        "status": "active"
+      }
+    }
+    ```
+  </Step>
+
+  <Step title="Authenticate requests">
+    Include the access token as a Bearer token in the `Authorization` header for all authenticated endpoints.
+
+    ```bash
+    Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+    ```
+  </Step>
+
+  <Step title="Refresh when expired">
+    When the access token expires, exchange the refresh token for a new token pair (see [Token Refresh](#token-refresh)).
+  </Step>
+</Steps>
+
+## Token Refresh
+
+Refresh tokens are rotated on every use — the old token is invalidated and a new pair is issued.
+
+```bash
+POST /api/auth/refresh
+Content-Type: application/json
+
+{
+  "refresh_token": "a3f8c2d1..."
+}
+```
+
+Returns a new `access_token` and `refresh_token`. Refresh tokens expire after **90 days** of inactivity.
+
+To log out and revoke the refresh token:
+
+```bash
+POST /api/auth/logout
+Content-Type: application/json
+
+{
+  "refreshToken": "a3f8c2d1..."
+}
+```
+
+## Password Change
+
+Authenticated users can change their password by providing the current password and a new password (minimum 8 characters).
+
+```bash
+POST /api/auth/change-password
+Authorization: Bearer <access_token>
+Content-Type: application/json
+
+{
+  "currentPassword": "mypassword",
+  "newPassword": "newpassword123"
+}
+```
+
+<Note>
+  Password change is not available for accounts that sign in via OIDC. Those users must change their password through their identity provider.
+</Note>
+
+## Registration Modes
+
+The registration mode controls who can create a new account. It can be set with the `USER_SIGNUP` environment variable or toggled by an admin in the admin panel.
+
+<AccordionGroup>
+  <Accordion title="enabled">
+    Registration is open. Any visitor can create an account and immediately receive tokens to start using Anchor.
+
+    This is the default behavior when `USER_SIGNUP` is not set and no admin has changed the setting.
+  </Accordion>
+
+  <Accordion title="disabled">
+    Registration is closed. Attempts to call `POST /api/auth/register` return a `403 Forbidden` error. Only existing users (and admins who create accounts directly) can access Anchor.
+
+    Use this mode on private instances where user provisioning is handled manually or through OIDC.
+  </Accordion>
+
+  <Accordion title="review">
+    Registration is allowed, but new accounts start with `status: pending`. The server returns a success message instead of tokens:
+
+    ```json
+    {
+      "user": { "status": "pending", ... },
+      "message": "Registration successful. Your account is pending approval."
+    }
+    ```
+
+    An administrator must approve the account in the admin panel before the user can log in. Attempting to log in with a pending account returns a `403 Forbidden` error.
+  </Accordion>
+</AccordionGroup>
+
+## API Tokens
+
+API tokens provide long-lived credentials for programmatic access (scripts, integrations, third-party clients). They are scoped to the authenticated user.
+
+| Endpoint | Method | Description |
+|---|---|---|
+| `/api/auth/api-token` | `GET` | Retrieve the current API token |
+| `/api/auth/api-token/regenerate` | `POST` | Generate a new API token (invalidates the previous one) |
+| `/api/auth/api-token` | `DELETE` | Revoke the API token |
+
+All three endpoints require a valid `Authorization: Bearer <access_token>` header.
+
+```bash
+# Retrieve current token
+GET /api/auth/api-token
+Authorization: Bearer <access_token>
+
+# Response
+{ "apiToken": "anch_a1b2c3d4..." }
+```
+
+```bash
+# Generate / rotate token
+POST /api/auth/api-token/regenerate
+Authorization: Bearer <access_token>
+
+# Response
+{ "apiToken": "anch_e5f6g7h8..." }
+```
+
+## Profile Management
+
+### Update name
+
+```bash
+PATCH /api/auth/profile
+Authorization: Bearer <access_token>
+Content-Type: application/json
+
+{
+  "name": "Ada Byron"
+}
+```
+
+The `name` field is optional and trimmed of whitespace. Maximum length is 100 characters.
+
+### Upload profile image
+
+```bash
+POST /api/auth/profile/image
+Authorization: Bearer <access_token>
+Content-Type: multipart/form-data
+
+image=<file>
+```
+
+Constraints:
+- **Maximum size:** 5 MB
+- **Allowed formats:** JPEG, PNG, WebP
+
+Uploading a new image automatically replaces and deletes the previous one.
+
+### Remove profile image
+
+```bash
+DELETE /api/auth/profile/image
+Authorization: Bearer <access_token>
+```

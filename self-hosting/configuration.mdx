@@ -1,0 +1,93 @@
+---
+title: "Configuration"
+description: "Environment variables and configuration options for Anchor"
+---
+
+Anchor works out of the box with sensible defaults — no environment variables are required to get started. Use the options below to customize behavior for production deployments.
+
+<Note>
+  Most settings, including OIDC authentication and user sign-up mode, can also be configured through the admin panel at **Settings**. Environment variables take precedence over admin panel settings when both are set.
+</Note>
+
+## Environment variables
+
+### Application
+
+| Variable | Required | Default | Description |
+|----------|----------|---------|-------------|
+| `APP_URL` | No | `http://localhost:3000` | Base URL where Anchor is served. Used for OIDC callback URLs and redirects. Set this to your public domain in production. |
+| `JWT_SECRET` | No | (auto-generated) | Secret used to sign authentication tokens. If not set, a random value is generated on first start and persisted to `/data/.jwt_secret`. |
+
+<Warning>
+  Set `JWT_SECRET` to a strong, random value in production. If the secret changes, all active sessions will be invalidated and users will need to log in again. You can generate a suitable value with `openssl rand -hex 32`.
+</Warning>
+
+### Database
+
+Leave all `PG_*` variables unset (or set `PG_HOST` to empty) to use the embedded PostgreSQL instance. Set `PG_HOST` to connect to an external database instead.
+
+| Variable | Required | Default | Description |
+|----------|----------|---------|-------------|
+| `PG_HOST` | No | (empty) | External PostgreSQL host. Leave empty to use the embedded database. |
+| `PG_PORT` | No | `5432` | PostgreSQL port. |
+| `PG_USER` | No | `anchor` | PostgreSQL username. |
+| `PG_PASSWORD` | No | `password` | PostgreSQL password. |
+| `PG_DATABASE` | No | `anchor` | PostgreSQL database name. |
+
+### User registration
+
+| Variable | Required | Default | Description |
+|----------|----------|---------|-------------|
+| `USER_SIGNUP` | No | (not set) | Controls who can create new accounts. Accepted values: `enabled` (anyone can register), `disabled` (no new registrations), or `review` (registrations require admin approval). When not set, admins control this setting via the admin panel. |
+
+### OIDC authentication
+
+| Variable | Required | Default | Description |
+|----------|----------|---------|-------------|
+| `OIDC_ENABLED` | No | — | Set to `true` to enable OIDC authentication. |
+| `OIDC_PROVIDER_NAME` | No | `"OIDC Provider"` | Display name shown on the login button (e.g., `"Pocket ID"` or `"Authelia"`). |
+| `OIDC_ISSUER_URL` | When OIDC enabled | — | Base URL of your OIDC provider (e.g., `https://auth.example.com`). |
+| `OIDC_CLIENT_ID` | When OIDC enabled | — | Client ID registered with your OIDC provider. |
+| `OIDC_CLIENT_SECRET` | No | — | Client secret. Omit this for public clients that use PKCE (no client secret). |
+| `DISABLE_INTERNAL_AUTH` | No | `false` | Set to `true` to hide the local username/password login form. Use this to enforce OIDC-only login. |
+
+## Complete docker-compose.yml example
+
+The following example shows all available environment variables. Remove or comment out any that you do not need.
+
+```yaml
+services:
+  anchor:
+    image: ghcr.io/zhfahim/anchor:latest
+    container_name: anchor
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      # Application
+      - APP_URL=https://notes.example.com
+      - JWT_SECRET=your-strong-random-secret
+
+      # External database (remove to use embedded PostgreSQL)
+      - PG_HOST=postgres
+      - PG_PORT=5432
+      - PG_USER=anchor
+      - PG_PASSWORD=your-secure-password
+      - PG_DATABASE=anchor
+
+      # User registration
+      - USER_SIGNUP=enabled
+
+      # OIDC authentication
+      - OIDC_ENABLED=true
+      - OIDC_PROVIDER_NAME=Pocket ID
+      - OIDC_ISSUER_URL=https://auth.example.com
+      - OIDC_CLIENT_ID=your-client-id
+      - OIDC_CLIENT_SECRET=your-client-secret
+      - DISABLE_INTERNAL_AUTH=false
+    volumes:
+      - anchor_data:/data
+
+volumes:
+  anchor_data:
+```

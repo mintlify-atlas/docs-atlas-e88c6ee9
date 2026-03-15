@@ -1,0 +1,89 @@
+---
+title: "Update Share Permission"
+description: "Change the permission level of an existing note share."
+---
+
+Updates the permission level (`viewer` or `editor`) for an existing share. The authenticated user must be the owner of the note.
+
+```
+PATCH /api/notes/:id/shares/:shareId
+```
+
+## Path Parameters
+
+<ParamField path="id" type="string" required>
+  The ID of the note.
+</ParamField>
+
+<ParamField path="shareId" type="string" required>
+  The ID of the share to update.
+</ParamField>
+
+## Request Body
+
+<ParamField body="permission" type="string" required>
+  The new permission level. Must be one of `viewer` or `editor`.
+
+  - `viewer` — the user can read the note but cannot make changes
+  - `editor` — the user can read and edit the note
+</ParamField>
+
+## Response
+
+Returns the updated `NoteShare` object.
+
+<ResponseField name="id" type="string">
+  Unique identifier for the share (UUID).
+</ResponseField>
+
+<ResponseField name="noteId" type="string">
+  The ID of the shared note.
+</ResponseField>
+
+<ResponseField name="sharedWithUserId" type="string">
+  The ID of the user the note is shared with.
+</ResponseField>
+
+<ResponseField name="permission" type="string">
+  The updated permission level: `viewer` or `editor`.
+</ResponseField>
+
+<ResponseField name="sharedByUserId" type="string">
+  The ID of the user who created the share.
+</ResponseField>
+
+<ResponseField name="isDeleted" type="boolean">
+  Whether the share has been revoked.
+</ResponseField>
+
+<ResponseField name="createdAt" type="string">
+  ISO 8601 timestamp of when the share was created.
+</ResponseField>
+
+<ResponseField name="updatedAt" type="string">
+  ISO 8601 timestamp of when the share was last updated.
+</ResponseField>
+
+## Example
+
+```bash
+curl -X PATCH https://your-anchor-instance.com/api/notes/NOTE_ID/shares/SHARE_ID \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "permission": "viewer"
+  }'
+```
+
+```json Response
+{
+  "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  "noteId": "NOTE_ID",
+  "sharedWithUserId": "user_abc123",
+  "permission": "viewer",
+  "sharedByUserId": "user_xyz789",
+  "isDeleted": false,
+  "createdAt": "2026-03-15T10:00:00.000Z",
+  "updatedAt": "2026-03-15T11:30:00.000Z"
+}
+```

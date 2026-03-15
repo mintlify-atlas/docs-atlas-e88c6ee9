@@ -1,0 +1,74 @@
+---
+title: Delete tag
+description: Soft-delete a tag by setting isDeleted to true. The tag is no longer returned in list results but its data is preserved.
+---
+
+Soft-deletes a tag by setting `isDeleted: true`. The tag is removed from [List tags](/api-reference/tags/list) results and will no longer appear on notes, but its data is preserved in the database.
+
+<Note>
+  Deleting a tag does not remove it from notes that already have it assigned — the tag association is retained in the data, but the tag itself is marked as deleted.
+</Note>
+
+## Path parameters
+
+<ParamField path="id" type="string" required>
+  The UUID of the tag to delete.
+</ParamField>
+
+## Response
+
+Returns the deleted Tag object with `isDeleted: true`.
+
+<ResponseField name="id" type="string" required>
+  Unique identifier (UUID).
+</ResponseField>
+
+<ResponseField name="name" type="string" required>
+  Tag name.
+</ResponseField>
+
+<ResponseField name="color" type="string">
+  Color identifier. `null` if not set.
+</ResponseField>
+
+<ResponseField name="isDeleted" type="boolean" required>
+  Always `true` for tags returned by this endpoint.
+</ResponseField>
+
+<ResponseField name="createdAt" type="string" required>
+  ISO 8601 creation timestamp.
+</ResponseField>
+
+<ResponseField name="updatedAt" type="string" required>
+  ISO 8601 timestamp of this deletion.
+</ResponseField>
+
+<ResponseField name="userId" type="string" required>
+  ID of the owning user.
+</ResponseField>
+
+<RequestExample>
+
+```bash cURL
+curl --request DELETE \
+  --url 'https://anchor.example.com/api/tags/tag-uuid-1' \
+  --header 'Authorization: Bearer <token>'
+```
+
+</RequestExample>
+
+<ResponseExample>
+
+```json 200
+{
+  "id": "tag-uuid-1",
+  "name": "work",
+  "color": "#3B82F6",
+  "isDeleted": true,
+  "createdAt": "2024-01-10T09:00:00.000Z",
+  "updatedAt": "2024-03-15T12:00:00.000Z",
+  "userId": "user-uuid-here"
+}
+```
+
+</ResponseExample>

@@ -1,0 +1,168 @@
+---
+title: Delete note
+description: Soft-delete, permanently delete, or restore notes. Includes bulk operations for moving multiple notes to trash or archiving them.
+---
+
+Anchor supports two levels of deletion: a recoverable soft delete (trash) and an irreversible permanent delete. Notes can also be restored from trash, and bulk operations allow acting on multiple notes at once.
+
+## Soft delete (move to trash)
+
+`DELETE /api/notes/:id`
+
+Moves the note to the trash by setting its state to `trashed`. The note remains in the database and can be restored.
+
+<ParamField path="id" type="string" required>
+  The UUID of the note to trash.
+</ParamField>
+
+<RequestExample>
+
+```bash cURL
+curl --request DELETE \
+  --url 'https://anchor.example.com/api/notes/a1b2c3d4-e5f6-7890-abcd-ef1234567890' \
+  --header 'Authorization: Bearer <token>'
+```
+
+</RequestExample>
+
+<ResponseExample>
+
+```json 200
+{
+  "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  "title": "Meeting notes",
+  "state": "trashed",
+  "updatedAt": "2024-03-15T12:00:00.000Z"
+}
+```
+
+</ResponseExample>
+
+---
+
+## Restore from trash
+
+`PATCH /api/notes/:id/restore`
+
+Restores a trashed note by setting its state back to `active`.
+
+<ParamField path="id" type="string" required>
+  The UUID of the trashed note to restore.
+</ParamField>
+
+<RequestExample>
+
+```bash cURL
+curl --request PATCH \
+  --url 'https://anchor.example.com/api/notes/a1b2c3d4-e5f6-7890-abcd-ef1234567890/restore' \
+  --header 'Authorization: Bearer <token>'
+```
+
+</RequestExample>
+
+<ResponseExample>
+
+```json 200
+{
+  "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  "title": "Meeting notes",
+  "state": "active",
+  "updatedAt": "2024-03-15T12:05:00.000Z"
+}
+```
+
+</ResponseExample>
+
+---
+
+## Permanent delete
+
+`DELETE /api/notes/:id/permanent`
+
+<Warning>
+  Permanently deletes the note. This action is irreversible — the note cannot be recovered after a permanent delete.
+</Warning>
+
+<ParamField path="id" type="string" required>
+  The UUID of the note to permanently delete.
+</ParamField>
+
+<RequestExample>
+
+```bash cURL
+curl --request DELETE \
+  --url 'https://anchor.example.com/api/notes/a1b2c3d4-e5f6-7890-abcd-ef1234567890/permanent' \
+  --header 'Authorization: Bearer <token>'
+```
+
+</RequestExample>
+
+<ResponseExample>
+
+```json 200
+{
+  "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  "title": "Meeting notes",
+  "state": "deleted"
+}
+```
+
+</ResponseExample>
+
+---
+
+## Bulk delete
+
+`POST /api/notes/bulk/delete`
+
+Moves multiple notes to trash in a single request.
+
+<ParamField body="noteIds" type="string[]" required>
+  Array of note UUIDs to move to trash. Each ID must be non-empty.
+</ParamField>
+
+<RequestExample>
+
+```bash cURL
+curl --request POST \
+  --url 'https://anchor.example.com/api/notes/bulk/delete' \
+  --header 'Authorization: Bearer <token>' \
+  --header 'Content-Type: application/json' \
+  --data '{
+    "noteIds": [
+      "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+      "b2c3d4e5-f6a7-8901-bcde-f12345678901"
+    ]
+  }'
+```
+
+</RequestExample>
+
+---
+
+## Bulk archive
+
+`POST /api/notes/bulk/archive`
+
+Archives multiple notes in a single request by setting `isArchived: true` on each.
+
+<ParamField body="noteIds" type="string[]" required>
+  Array of note UUIDs to archive. Each ID must be non-empty.
+</ParamField>
+
+<RequestExample>
+
+```bash cURL
+curl --request POST \
+  --url 'https://anchor.example.com/api/notes/bulk/archive' \
+  --header 'Authorization: Bearer <token>' \
+  --header 'Content-Type: application/json' \
+  --data '{
+    "noteIds": [
+      "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+      "b2c3d4e5-f6a7-8901-bcde-f12345678901"
+    ]
+  }'
+```
+
+</RequestExample>

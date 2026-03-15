@@ -1,0 +1,79 @@
+---
+title: "Offline Sync"
+description: "How Anchor stores notes locally and syncs changes across devices"
+---
+
+<Note>
+Anchor is **offline-first**: every read and write goes to a local database on your device first. The server is the source of truth for syncing across devices, but it is never in the critical path for viewing or editing your notes.
+</Note>
+
+## Offline-First Architecture
+
+When you create, edit, or delete a note, the change is written immediately to a local database stored on the device. The UI reflects this change instantly — no waiting for a network response. When the device has a connection, Anchor pushes those local changes to the server in the background.
+
+This means Anchor behaves consistently whether you are on a fast connection, a slow connection, or completely offline.
+
+## What Works Offline vs. What Requires a Connection
+
+<CardGroup cols={2}>
+  <Card title="Works Offline" icon="wifi-slash">
+    - Creating and editing notes
+    - Deleting and restoring notes
+    - Archiving and pinning notes
+    - Applying tags to notes
+    - Browsing your full note list
+    - Searching notes by title or content
+    - Creating and renaming tags
+  </Card>
+  <Card title="Requires Connection" icon="wifi">
+    - Sharing a note with another user
+    - Viewing notes that others have shared with you
+    - Approving or rejecting pending users (admin)
+    - Admin panel operations (stats, user management)
+    - Initial account login and registration
+  </Card>
+</CardGroup>
+
+## How Sync Works
+
+Sync is a **batch push** model. When the app comes online, it collects all locally modified records since the last successful sync and sends them to the server in a single request.
+
+### Notes Sync
+
+```http
+POST /api/notes/sync
+```
+
+The request body contains:
+- `lastSyncedAt` — an ISO 8601 timestamp of the last successful sync (optional on first sync).
+- `changes` — an array of note objects that were created or modified locally since `lastSyncedAt`. Each item includes the note's `id`, `title`, `content`, `isPinned`, `isArchived`, `background`, `state`, `tagIds`, and the client-side `updatedAt` timestamp.
+
+The server responds with any notes that changed on the server side since `lastSyncedAt`, so both directions are covered in one round trip.
+
+### Tags Sync
+
+```http
+POST /api/tags/sync
+```
+
+Works the same way as notes sync. Local tag creations, renames, recolorings, and deletions are batched and pushed. The server returns any tag changes made on other devices since the last sync.
+
+## Conflict Resolution
+
+Anchor uses a **last-write-wins** strategy based on the `updatedAt` timestamp. When the same note is modified on two different devices while both are offline:
+
+1. Both devices push their version of the note during sync.
+2. The server compares the `updatedAt` values.
+3. The version with the **later `updatedAt`** is kept; the older version is discarded.
+
+This is a simple, predictable strategy that works well for personal note-taking. Real-time collaborative editing with operational transforms is not currently implemented but is planned for a future release.
+
+## Sync Triggers
+
+Sync is triggered automatically in the following situations:
+
+- The app transitions from offline to online.
+- The app is opened or brought to the foreground while online.
+- Periodically in the background while the app is running and connected.
+
+You do not need to manually trigger a sync — Anchor handles it transparently.

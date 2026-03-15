@@ -1,0 +1,104 @@
+---
+title: "External Database"
+description: "Connect Anchor to an external PostgreSQL database instead of the embedded one"
+---
+
+Anchor ships with an embedded PostgreSQL instance that is suitable for personal use and small teams. For larger deployments, or when you need independent database backups, replication, or high availability, you can connect Anchor to an external PostgreSQL database.
+
+## Embedded vs external database
+
+| | Embedded | External |
+|-|----------|----------|
+| Setup required | None | Configure `PG_*` environment variables |
+| Data location | `/data/postgres/` inside the volume | Your own PostgreSQL instance |
+| Backup approach | Back up the `anchor_data` Docker volume | Use standard PostgreSQL tooling (`pg_dump`, etc.) |
+| Recommended for | Personal use, small teams | Production deployments, teams needing independent DB management |
+
+## Configuration
+
+Set `PG_HOST` to any non-empty value to switch from the embedded database to an external one. The entrypoint script uses this variable to decide which mode to run.
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `PG_HOST` | (empty) | Hostname or IP of your PostgreSQL server. Leave empty for embedded mode. |
+| `PG_PORT` | `5432` | Port your PostgreSQL server listens on. |
+| `PG_USER` | `anchor` | Username Anchor will use to connect. |
+| `PG_PASSWORD` | `password` | Password for the database user. |
+| `PG_DATABASE` | `anchor` | Name of the database Anchor will use. |
+
+Anchor constructs the connection string internally as:
+
+```
+postgresql://<PG_USER>:<PG_PASSWORD>@<PG_HOST>:<PG_PORT>/<PG_DATABASE>
+```
+
+## Docker Compose example with a separate PostgreSQL container
+
+The following `docker-compose.yml` runs Anchor and PostgreSQL as separate services. Anchor waits for the `postgres` service to be listed as a dependency before starting.
+
+```yaml
+services:
+  anchor:
+    image: ghcr.io/zhfahim/anchor:latest
+    container_name: anchor
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - PG_HOST=postgres
+      - PG_USER=anchor
+      - PG_PASSWORD=your-secure-password
+      - PG_DATABASE=anchor
+    volumes:
+      - anchor_data:/data
+    depends_on:
+      - postgres
+
+  postgres:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=anchor
+      - POSTGRES_PASSWORD=your-secure-password
+      - POSTGRES_DB=anchor
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  anchor_data:
+  postgres_data:
+```
+
+<Note>
+  The `anchor_data` volume is still needed even when using an external database. It stores the auto-generated `JWT_SECRET` at `/data/.jwt_secret` so that the secret persists across container restarts.
+</Note>
+
+## Migrations
+
+Anchor uses [Prisma](https://www.prisma.io/) to manage the database schema. On every startup, the entrypoint script automatically runs:
+
+```bash
+prisma migrate deploy
+```
+
+This applies any pending migrations before the API server starts. You do not need to run migrations manually — whether you are doing a fresh install or upgrading to a new version, the schema is always brought up to date automatically.
+
+## Connecting to an existing PostgreSQL server
+
+If you already have a PostgreSQL server running (e.g., a managed cloud instance or a shared server), create a dedicated database and user for Anchor, then provide the connection details via environment variables:
+
+```sql
+CREATE USER anchor WITH PASSWORD 'your-secure-password';
+CREATE DATABASE anchor OWNER anchor;
+```
+
+Then set the environment variables in your `docker-compose.yml`:
+
+```yaml
+environment:
+  - PG_HOST=your-postgres-host.example.com
+  - PG_PORT=5432
+  - PG_USER=anchor
+  - PG_PASSWORD=your-secure-password
+  - PG_DATABASE=anchor
+```

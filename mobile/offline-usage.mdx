@@ -1,0 +1,70 @@
+---
+title: "Using Anchor on Mobile"
+description: "Working with notes offline and syncing across devices with the Anchor mobile app"
+---
+
+Anchor is built offline-first. Every note you create or edit is saved immediately to a local SQLite database on your device, so the app works fully without an internet connection. When connectivity is restored, changes sync automatically to your server and propagate to your other devices.
+
+## Offline vs. Online capabilities
+
+<CardGroup cols={2}>
+  <Card title="Works offline" icon="wifi-slash">
+    - Create, edit, and delete notes
+    - Pin and archive notes
+    - Full-text search by title and content
+    - Create and assign tags
+    - Change note backgrounds and colors
+    - Browse shared notes already synced to the device
+  </Card>
+  <Card title="Requires connection" icon="wifi">
+    - Initial login and authentication
+    - Syncing edits to the server
+    - Receiving notes shared with you
+    - Propagating tag changes to other devices
+    - Receiving notes deleted or shared by others
+  </Card>
+</CardGroup>
+
+## How sync works
+
+The app monitors network connectivity in the background. When the device goes from offline to online, Anchor automatically:
+
+1. Syncs any pending tag changes to the server first, ensuring tag IDs are consistent before notes are pushed.
+2. Syncs pending note changes — new notes, edits, deletes, archives, and pin changes.
+3. Pulls down any changes from the server made on other devices since the last sync.
+
+Conflict resolution follows a **server-wins** strategy based on `updatedAt` timestamps. If the server has a newer version of a note, it overwrites the local copy. If the local version is newer, it is pushed to the server.
+
+You do not need to manually trigger a sync — it happens automatically whenever connectivity is detected.
+
+## Notes and editing
+
+The mobile editor uses the same Quill-based rich text engine as the web app. All formatting options are available on mobile:
+
+- **Text styling:** bold, italic, underline
+- **Structure:** headings, bullet lists, numbered lists, checkboxes
+- **Backgrounds:** solid colors and patterns to visually distinguish notes
+
+Notes are created with a locally generated UUID, so there is no need to be online to start writing. The note will be assigned its final server ID during the next sync.
+
+## Search
+
+Search runs entirely against the local database and is available offline. It matches against both the note title and body content. Results update as you type.
+
+## Tags
+
+Tags are stored locally and can be created, renamed, and deleted without a connection. The app syncs tags before notes during each sync cycle so that tag associations are always resolved correctly on the server.
+
+## Shared notes
+
+Notes that other users have shared with you are downloaded during sync and stored in the local database. You can read and (if you have editor permission) edit them offline. If a note's sharing is revoked while you are offline, the note is removed from your device on the next successful sync.
+
+## Authentication on mobile
+
+The app uses `flutter_appauth` to handle OIDC login via the PKCE flow. After a successful login, the access token and session data are stored in the device's secure storage (`flutter_secure_storage`). The server URL is also persisted securely, so you only need to enter it once.
+
+If your session expires while offline, you will be prompted to sign in again the next time the app needs to contact the server. Notes already on the device remain accessible in the meantime.
+
+<Tip>
+  Keep the app updated to get the latest sync reliability improvements. Check [github.com/zhfahim/anchor/releases](https://github.com/zhfahim/anchor/releases) for new APK releases.
+</Tip>

@@ -1,0 +1,36 @@
+---
+title: "Logout"
+description: "Revoke a refresh token"
+---
+
+## Endpoint
+
+```
+POST /api/auth/logout
+```
+
+No authentication required — only the refresh token is needed.
+
+## Request Body
+
+<ParamField body="refreshToken" type="string">
+  The refresh token to revoke. If omitted, the request succeeds silently with no effect.
+</ParamField>
+
+## Example Request
+
+```bash
+curl -X POST https://your-anchor.example.com/api/auth/logout \
+  -H "Content-Type: application/json" \
+  -d '{
+    "refreshToken": "a3f1c2d4e5b6..."
+  }'
+```
+
+## Response
+
+Returns `200 OK` with no response body.
+
+<Note>
+  Logging out invalidates the refresh token so it cannot be used to obtain new access tokens. However, any existing **access token** remains valid until it naturally expires. For sensitive use cases, treat the access token as compromised after logout and let it expire.
+</Note>

@@ -1,0 +1,39 @@
+---
+title: "Revoke Share"
+description: "Revoke a user's access to a shared note."
+---
+
+Revokes an existing share, removing the specified user's access to the note. The authenticated user must be the owner of the note.
+
+```
+DELETE /api/notes/:id/shares/:shareId
+```
+
+<Note>
+  Revoking a share performs a soft delete — the share record is retained in the database with `isDeleted: true` rather than being permanently removed.
+</Note>
+
+## Path Parameters
+
+<ParamField path="id" type="string" required>
+  The ID of the note.
+</ParamField>
+
+<ParamField path="shareId" type="string" required>
+  The ID of the share to revoke.
+</ParamField>
+
+## Response
+
+Returns `200 OK` on success.
+
+## Example
+
+```bash
+curl -X DELETE https://your-anchor-instance.com/api/notes/NOTE_ID/shares/SHARE_ID \
+  -H "Authorization: Bearer <token>"
+```
+
+```json Response
+{}
+```

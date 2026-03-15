@@ -1,0 +1,43 @@
+---
+title: "System Stats"
+description: "Retrieve system-wide statistics including total users, notes, and tags."
+---
+
+Returns aggregate statistics about the Anchor instance. Requires admin authentication.
+
+```
+GET /api/admin/stats
+```
+
+<Note>
+  This endpoint requires the authenticated user to have `isAdmin: true`.
+</Note>
+
+## Response
+
+<ResponseField name="totalUsers" type="number">
+  The total number of registered users in the system.
+</ResponseField>
+
+<ResponseField name="totalNotes" type="number">
+  The total number of active notes (excludes deleted notes).
+</ResponseField>
+
+<ResponseField name="totalTags" type="number">
+  The total number of tags across all users.
+</ResponseField>
+
+## Example
+
+```bash
+curl https://your-anchor-instance.com/api/admin/stats \
+  -H "Authorization: Bearer <token>"
+```
+
+```json Response
+{
+  "totalUsers": 42,
+  "totalNotes": 318,
+  "totalTags": 95
+}
+```

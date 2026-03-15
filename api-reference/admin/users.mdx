@@ -1,0 +1,353 @@
+---
+title: "User Management"
+description: "Admin endpoints for listing, creating, updating, and deleting users."
+---
+
+All endpoints on this page require admin authentication — the authenticated user must have `isAdmin: true`.
+
+---
+
+## List Users
+
+Returns a paginated list of all users.
+
+```
+GET /api/admin/users
+```
+
+### Query Parameters
+
+<ParamField query="skip" type="number">
+  Number of records to skip. Defaults to `0`.
+</ParamField>
+
+<ParamField query="take" type="number">
+  Maximum number of records to return. Defaults to `50`.
+</ParamField>
+
+### Response
+
+<ResponseField name="users" type="array">
+  Array of user objects. Each user includes `id`, `email`, `name`, `isAdmin`, `status`, `authMethod` (`local` or `oidc`), `createdAt`, `updatedAt`, and a `_count` object with `notes` and `tags` counts.
+</ResponseField>
+
+<ResponseField name="total" type="number">
+  Total number of users in the system.
+</ResponseField>
+
+<ResponseField name="skip" type="number">
+  The offset applied to this page.
+</ResponseField>
+
+<ResponseField name="take" type="number">
+  The page size applied to this page.
+</ResponseField>
+
+```bash
+curl "https://your-anchor-instance.com/api/admin/users?skip=0&take=25" \
+  -H "Authorization: Bearer <token>"
+```
+
+```json Response
+{
+  "users": [
+    {
+      "id": "user_abc123",
+      "email": "jane@example.com",
+      "name": "Jane Smith",
+      "isAdmin": false,
+      "status": "active",
+      "authMethod": "local",
+      "createdAt": "2026-01-10T08:00:00.000Z",
+      "updatedAt": "2026-03-01T12:00:00.000Z",
+      "_count": { "notes": 12, "tags": 5 }
+    }
+  ],
+  "total": 42,
+  "skip": 0,
+  "take": 25
+}
+```
+
+---
+
+## List Pending Users
+
+Returns users whose status is `pending`, i.e., registrations awaiting admin approval. Only relevant when the registration mode is set to `review`.
+
+```
+GET /api/admin/users/pending
+```
+
+### Response
+
+Returns an array of user objects with `id`, `email`, `name`, `isAdmin`, `status`, `authMethod`, `createdAt`, and `updatedAt`.
+
+```bash
+curl https://your-anchor-instance.com/api/admin/users/pending \
+  -H "Authorization: Bearer <token>"
+```
+
+```json Response
+[
+  {
+    "id": "user_def456",
+    "email": "newuser@example.com",
+    "name": "New User",
+    "isAdmin": false,
+    "status": "pending",
+    "authMethod": "local",
+    "createdAt": "2026-03-14T09:00:00.000Z",
+    "updatedAt": "2026-03-14T09:00:00.000Z"
+  }
+]
+```
+
+---
+
+## Create User
+
+Creates a new user account. The new user is immediately set to `active` status, bypassing any registration mode restrictions.
+
+```
+POST /api/admin/users
+```
+
+### Request Body
+
+<ParamField body="email" type="string" required>
+  The user's email address. Must be unique.
+</ParamField>
+
+<ParamField body="password" type="string" required>
+  The user's initial password. Minimum 8 characters.
+</ParamField>
+
+<ParamField body="name" type="string" required>
+  The user's display name. Maximum 100 characters.
+</ParamField>
+
+### Response
+
+Returns the created user object (`id`, `email`, `name`, `isAdmin`, `createdAt`, `updatedAt`).
+
+```bash
+curl -X POST https://your-anchor-instance.com/api/admin/users \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "newuser@example.com",
+    "password": "securepassword",
+    "name": "New User"
+  }'
+```
+
+```json Response
+{
+  "id": "user_ghi789",
+  "email": "newuser@example.com",
+  "name": "New User",
+  "isAdmin": false,
+  "createdAt": "2026-03-15T10:00:00.000Z",
+  "updatedAt": "2026-03-15T10:00:00.000Z"
+}
+```
+
+---
+
+## Update User
+
+Updates a user's profile or admin status. All fields are optional.
+
+```
+PATCH /api/admin/users/:id
+```
+
+### Path Parameters
+
+<ParamField path="id" type="string" required>
+  The ID of the user to update.
+</ParamField>
+
+### Request Body
+
+<ParamField body="email" type="string">
+  New email address for the user. Must be unique.
+</ParamField>
+
+<ParamField body="name" type="string">
+  New display name for the user.
+</ParamField>
+
+<ParamField body="isAdmin" type="boolean">
+  Grant or revoke admin privileges. You cannot remove your own admin status, and the last admin user cannot be demoted.
+</ParamField>
+
+### Response
+
+Returns the updated user object (`id`, `email`, `name`, `isAdmin`, `createdAt`, `updatedAt`).
+
+```bash
+curl -X PATCH https://your-anchor-instance.com/api/admin/users/USER_ID \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Updated Name",
+    "isAdmin": true
+  }'
+```
+
+```json Response
+{
+  "id": "USER_ID",
+  "email": "jane@example.com",
+  "name": "Updated Name",
+  "isAdmin": true,
+  "createdAt": "2026-01-10T08:00:00.000Z",
+  "updatedAt": "2026-03-15T11:00:00.000Z"
+}
+```
+
+---
+
+## Delete User
+
+Permanently deletes a user and all of their associated data.
+
+```
+DELETE /api/admin/users/:id
+```
+
+<Warning>
+  Deleting a user is irreversible. All of their notes, tags, and shares are permanently removed via cascading deletes. The last admin user cannot be deleted.
+</Warning>
+
+### Path Parameters
+
+<ParamField path="id" type="string" required>
+  The ID of the user to delete.
+</ParamField>
+
+### Response
+
+```json
+{ "message": "User deleted successfully" }
+```
+
+```bash
+curl -X DELETE https://your-anchor-instance.com/api/admin/users/USER_ID \
+  -H "Authorization: Bearer <token>"
+```
+
+---
+
+## Reset Password
+
+Resets a user's password. If `newPassword` is omitted, a secure random password is generated and returned in the response.
+
+```
+POST /api/admin/users/:id/reset-password
+```
+
+### Path Parameters
+
+<ParamField path="id" type="string" required>
+  The ID of the user whose password should be reset.
+</ParamField>
+
+### Request Body
+
+<ParamField body="newPassword" type="string">
+  The new password. Minimum 8 characters. If omitted, a random 16-character password is generated.
+</ParamField>
+
+### Response
+
+<ResponseField name="message" type="string">
+  A confirmation message.
+</ResponseField>
+
+<ResponseField name="newPassword" type="string">
+  Only present when a password was auto-generated (i.e., `newPassword` was not provided in the request). Store this value securely — it will not be retrievable again.
+</ResponseField>
+
+```bash
+curl -X POST https://your-anchor-instance.com/api/admin/users/USER_ID/reset-password \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{ "newPassword": "newSecurePass" }'
+```
+
+```json Response
+{
+  "message": "Password reset successfully"
+}
+```
+
+---
+
+## Approve User
+
+Approves a pending user registration, setting their status to `active` so they can log in. Only applicable when registration mode is `review`.
+
+```
+POST /api/admin/users/:id/approve
+```
+
+### Path Parameters
+
+<ParamField path="id" type="string" required>
+  The ID of the pending user to approve.
+</ParamField>
+
+### Response
+
+Returns the updated user object with `status: "active"`.
+
+```bash
+curl -X POST https://your-anchor-instance.com/api/admin/users/USER_ID/approve \
+  -H "Authorization: Bearer <token>"
+```
+
+```json Response
+{
+  "id": "USER_ID",
+  "email": "newuser@example.com",
+  "name": "New User",
+  "isAdmin": false,
+  "status": "active",
+  "createdAt": "2026-03-14T09:00:00.000Z",
+  "updatedAt": "2026-03-15T10:00:00.000Z"
+}
+```
+
+---
+
+## Reject User
+
+Rejects and permanently deletes a pending user registration.
+
+```
+POST /api/admin/users/:id/reject
+```
+
+<Note>
+  This endpoint only works for users with `status: "pending"`. The user record is permanently deleted upon rejection.
+</Note>
+
+### Path Parameters
+
+<ParamField path="id" type="string" required>
+  The ID of the pending user to reject.
+</ParamField>
+
+### Response
+
+```json
+{ "message": "User rejected and deleted successfully" }
+```
+
+```bash
+curl -X POST https://your-anchor-instance.com/api/admin/users/USER_ID/reject \
+  -H "Authorization: Bearer <token>"
+```

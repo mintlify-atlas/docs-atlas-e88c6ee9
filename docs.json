@@ -1,122 +1,135 @@
 {
   "$schema": "https://mintlify.com/docs.json",
-  "theme": "mint",
-  "name": "Mint Starter Kit",
+  "name": "Anchor",
+  "theme": "almond",
   "colors": {
-    "primary": "#16A34A",
-    "light": "#07C983",
-    "dark": "#15803D"
+    "primary": "#242b2c",
+    "light": "#040404",
+    "dark": "#242b2c"
   },
-  "favicon": "/favicon.svg",
+  "favicon": "https://media.brand.dev/f29018a1-d2d4-46d2-8d13-4a2632a679a2.png",
+  "logo": {
+    "light": "https://media.brand.dev/3b16fb27-22e9-4daa-a368-88b404b0d37e.svg",
+    "dark": "https://media.brand.dev/3b16fb27-22e9-4daa-a368-88b404b0d37e.svg"
+  },
+  "navbar": {
+    "primary": {
+      "type": "github",
+      "href": "https://github.com/zhfahim/anchor"
+    }
+  },
+  "footer": {
+    "socials": {
+      "github": "https://github.com/zhfahim/anchor"
+    }
+  },
   "navigation": {
     "tabs": [
       {
-        "tab": "Guides",
+        "tab": "Documentation",
         "groups": [
           {
-            "group": "Getting started",
+            "group": "Get Started",
             "pages": [
-              "index",
-              "quickstart",
-              "development"
+              "introduction",
+              "quickstart"
             ]
           },
           {
-            "group": "Customization",
+            "group": "Self Hosting",
             "pages": [
-              "essentials/settings",
-              "essentials/navigation"
+              "self-hosting/docker",
+              "self-hosting/configuration",
+              "self-hosting/external-database"
             ]
           },
           {
-            "group": "Writing content",
+            "group": "Authentication",
             "pages": [
-              "essentials/markdown",
-              "essentials/code",
-              "essentials/images",
-              "essentials/reusable-snippets"
+              "authentication/local-auth",
+              "authentication/oidc"
             ]
           },
           {
-            "group": "AI tools",
+            "group": "Features",
             "pages": [
-              "ai-tools/cursor",
-              "ai-tools/claude-code",
-              "ai-tools/windsurf"
+              "features/notes",
+              "features/tags",
+              "features/sharing",
+              "features/offline-sync",
+              "features/admin-panel"
+            ]
+          },
+          {
+            "group": "Mobile App",
+            "pages": [
+              "mobile/installation",
+              "mobile/offline-usage"
             ]
           }
         ]
       },
       {
-        "tab": "API reference",
+        "tab": "API Reference",
         "groups": [
           {
-            "group": "API documentation",
+            "group": "Overview",
             "pages": [
-              "api-reference/introduction"
+              "api-reference/overview"
             ]
           },
           {
-            "group": "Endpoint examples",
+            "group": "Authentication",
             "pages": [
-              "api-reference/endpoint/get",
-              "api-reference/endpoint/create",
-              "api-reference/endpoint/delete",
-              "api-reference/endpoint/webhook"
+              "api-reference/auth/register",
+              "api-reference/auth/login",
+              "api-reference/auth/refresh",
+              "api-reference/auth/logout",
+              "api-reference/auth/profile"
+            ]
+          },
+          {
+            "group": "Notes",
+            "pages": [
+              "api-reference/notes/list",
+              "api-reference/notes/create",
+              "api-reference/notes/get",
+              "api-reference/notes/update",
+              "api-reference/notes/delete",
+              "api-reference/notes/sync",
+              "api-reference/notes/trash",
+              "api-reference/notes/archive"
+            ]
+          },
+          {
+            "group": "Tags",
+            "pages": [
+              "api-reference/tags/list",
+              "api-reference/tags/create",
+              "api-reference/tags/update",
+              "api-reference/tags/delete",
+              "api-reference/tags/sync"
+            ]
+          },
+          {
+            "group": "Note Sharing",
+            "pages": [
+              "api-reference/shares/share-note",
+              "api-reference/shares/list-shares",
+              "api-reference/shares/update-permission",
+              "api-reference/shares/revoke"
+            ]
+          },
+          {
+            "group": "Admin",
+            "pages": [
+              "api-reference/admin/stats",
+              "api-reference/admin/users",
+              "api-reference/admin/settings"
             ]
           }
         ]
       }
-    ],
-    "global": {
-      "anchors": [
-        {
-          "anchor": "Documentation",
-          "href": "https://mintlify.com/docs",
-          "icon": "book-open-cover"
-        },
-        {
-          "anchor": "Blog",
-          "href": "https://mintlify.com/blog",
-          "icon": "newspaper"
-        }
-      ]
-    }
-  },
-  "logo": {
-    "light": "/logo/light.svg",
-    "dark": "/logo/dark.svg"
-  },
-  "navbar": {
-    "links": [
-      {
-        "label": "Support",
-        "href": "mailto:hi@mintlify.com"
-      }
-    ],
-    "primary": {
-      "type": "button",
-      "label": "Dashboard",
-      "href": "https://dashboard.mintlify.com"
-    }
-  },
-  "contextual": {
-    "options": [
-     "copy",
-     "view",
-     "chatgpt",
-     "claude",
-     "perplexity",
-     "mcp",
-     "cursor",
-     "vscode"
-   ]
-  },
-  "footer": {
-    "socials": {
-      "x": "https://x.com/mintlify",
-      "github": "https://github.com/mintlify",
-      "linkedin": "https://linkedin.com/company/mintlify"
-    }
+    ]
   }
 }

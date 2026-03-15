@@ -1,0 +1,89 @@
+---
+title: "Tags"
+description: "Organize your notes with custom tags and colors"
+---
+
+Tags let you group and filter notes by topic, project, or any category that fits your workflow. Each tag belongs to a single user and can have an optional color to make it instantly recognizable in the UI.
+
+## Creating Your First Tag
+
+<Steps>
+  <Step title="Open the Tags section">
+    Navigate to **Tags** in the sidebar or bottom navigation. This lists all your existing tags.
+  </Step>
+  <Step title="Create a new tag">
+    Tap or click **New Tag**. Enter a name for the tag — names must be unique within your account. No two tags you own can share the same name.
+  </Step>
+  <Step title="Choose a color (optional)">
+    Select a color from the color picker. The color is stored as a string (e.g. a hex code or a named color token) and displayed as a chip or dot next to the tag name throughout the app.
+  </Step>
+  <Step title="Save">
+    Confirm to create the tag. The tag is saved to the local database and synced to the server on the next sync cycle.
+  </Step>
+</Steps>
+
+## Assigning Tags to Notes
+
+Tags can be attached to a note at creation time or added later:
+
+- **At creation**: include `tagIds` (an array of tag ID strings) in the create-note request.
+- **On an existing note**: open the note, tap the tag icon, and select the tags to apply. This sends a `PATCH /api/notes/:id` request with the updated `tagIds` array.
+
+A note can have multiple tags. Tags are stored as a many-to-many relation between `Note` and `Tag` in the database.
+
+## Filtering Notes by Tag
+
+To view only the notes that belong to a specific tag, select the tag from the tag list in the sidebar. Under the hood this calls:
+
+```http
+GET /api/notes?tagId={tagId}
+```
+
+You can also combine tag filtering with a text search:
+
+```http
+GET /api/notes?tagId={tagId}&search={query}
+```
+
+Alternatively, the dedicated tag-notes endpoint returns all notes for a tag:
+
+```http
+GET /api/tags/{tagId}/notes
+```
+
+## Renaming and Deleting Tags
+
+**Rename a tag**: open the tag options and choose **Rename**. The new name must still be unique for your account. Renaming sends a `PATCH /api/tags/:id` request.
+
+**Delete a tag**: open the tag options and choose **Delete**. This calls `DELETE /api/tags/:id`. Deleting a tag removes the tag itself; the notes that were tagged with it are **not** deleted — they simply no longer have that tag assigned.
+
+<Note>
+Tag deletion is tracked via an `isDeleted` flag on the `Tag` record. This allows the sync system to propagate deletions to other devices correctly during the next sync cycle.
+</Note>
+
+## Tag Uniqueness
+
+The database enforces a unique constraint on the combination of `(userId, name)`. This means:
+
+- You cannot create two tags with the same name under the same account.
+- Two different users can each have a tag named the same thing — uniqueness is per-user, not global.
+
+If you attempt to create a duplicate tag name, the request will be rejected with a conflict error.
+
+## Tag Sync
+
+Tags sync across all your devices using the same mechanism as notes. The `POST /api/tags/sync` endpoint accepts a batch of local tag changes and merges them with the server state. Sync happens automatically when the app comes back online after being offline.
+
+The sync payload includes an optional `lastSyncedAt` timestamp so the server can return only the changes that occurred since the last successful sync.
+
+## API Reference
+
+| Method | Endpoint | Description |
+|---|---|---|
+| `POST` | `/api/tags` | Create a tag |
+| `GET` | `/api/tags` | List all tags for the current user |
+| `GET` | `/api/tags/:id` | Get a single tag |
+| `GET` | `/api/tags/:id/notes` | Get all notes with a specific tag |
+| `PATCH` | `/api/tags/:id` | Rename or recolor a tag |
+| `DELETE` | `/api/tags/:id` | Delete a tag |
+| `POST` | `/api/tags/sync` | Sync local tag changes to the server |

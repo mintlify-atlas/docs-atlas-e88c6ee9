@@ -1,0 +1,101 @@
+---
+title: "Login"
+description: "Authenticate and receive JWT tokens"
+---
+
+## Endpoint
+
+```
+POST /api/auth/login
+```
+
+No authentication required.
+
+## Request Body
+
+<ParamField body="email" type="string" required>
+  The user's email address.
+</ParamField>
+
+<ParamField body="password" type="string" required>
+  The user's password.
+</ParamField>
+
+## Example Request
+
+```bash
+curl -X POST https://your-anchor.example.com/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "alice@example.com",
+    "password": "supersecret123"
+  }'
+```
+
+## Response
+
+<ResponseField name="access_token" type="string">
+  Short-lived JWT. Include this in the `Authorization: Bearer` header for authenticated requests.
+</ResponseField>
+
+<ResponseField name="refresh_token" type="string">
+  Long-lived token (90 days). Use [`POST /api/auth/refresh`](/api-reference/auth/refresh) to obtain a new access token when it expires.
+</ResponseField>
+
+<ResponseField name="user" type="object">
+  The authenticated user.
+
+  <Expandable title="user fields">
+    <ResponseField name="id" type="string">
+      Unique user ID (UUID).
+    </ResponseField>
+    <ResponseField name="email" type="string">
+      The user's email address.
+    </ResponseField>
+    <ResponseField name="name" type="string">
+      The user's display name.
+    </ResponseField>
+    <ResponseField name="profileImage" type="string | null">
+      URL path to the user's profile image, or `null` if not set.
+    </ResponseField>
+    <ResponseField name="isAdmin" type="boolean">
+      Whether the user has admin privileges.
+    </ResponseField>
+    <ResponseField name="status" type="string">
+      Account status. Either `active` or `pending`.
+    </ResponseField>
+    <ResponseField name="createdAt" type="string">
+      ISO 8601 timestamp of account creation.
+    </ResponseField>
+    <ResponseField name="updatedAt" type="string">
+      ISO 8601 timestamp of last account update.
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+## Example Response
+
+```json
+{
+  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "refresh_token": "a3f1c2d4e5b6...",
+  "user": {
+    "id": "550e8400-e29b-41d4-a716-446655440000",
+    "email": "alice@example.com",
+    "name": "Alice",
+    "profileImage": null,
+    "isAdmin": false,
+    "status": "active",
+    "createdAt": "2024-01-15T10:30:00.000Z",
+    "updatedAt": "2024-01-15T10:30:00.000Z"
+  }
+}
+```
+
+<Note>
+  Accounts using OIDC authentication cannot log in via this endpoint. They must use the OIDC login flow.
+</Note>
+
+<Warning>
+  Accounts in `pending` status will receive a `403 Forbidden` response until an admin approves the account.
+</Warning>

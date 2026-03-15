@@ -1,0 +1,78 @@
+---
+title: Introduction
+description: Anchor is an offline-first, self-hostable note-taking application focused on speed, privacy, and reliability.
+---
+
+<CardGroup cols={2}>
+  <Card title="Quickstart" icon="rocket" href="/quickstart">
+    Deploy Anchor and create your first note in minutes
+  </Card>
+  <Card title="Self Hosting" icon="server" href="/self-hosting/docker">
+    Run Anchor on your own infrastructure with Docker
+  </Card>
+  <Card title="OIDC Authentication" icon="key" href="/authentication/oidc">
+    Sign in with Pocket ID, Authelia, Keycloak, and more
+  </Card>
+  <Card title="API Reference" icon="code" href="/api-reference/overview">
+    Integrate with Anchor using the REST API
+  </Card>
+</CardGroup>
+
+## What is Anchor?
+
+Anchor is a **self-hosted note-taking application** that works fully offline. Notes are stored in a local database on each device, remain editable without an internet connection, and sync across devices automatically whenever connectivity is restored.
+
+Anchor is designed for individuals and teams who want:
+
+- **Privacy** — your notes live on your own server, never a third-party cloud
+- **Reliability** — offline-first means the app works regardless of connectivity
+- **Simplicity** — a clean interface focused on writing, not feature bloat
+- **Flexibility** — self-host with a single Docker container, with or without an external database
+
+## Key features
+
+<CardGroup cols={2}>
+  <Card title="Rich text editor" icon="pen-to-square">
+    Bold, italic, underline, headings, ordered and unordered lists, checkboxes, and more
+  </Card>
+  <Card title="Offline first" icon="wifi-slash">
+    All edits persist locally. No internet required to read or write notes
+  </Card>
+  <Card title="Cross-device sync" icon="arrows-rotate">
+    Changes propagate automatically across all your devices when online
+  </Card>
+  <Card title="Note sharing" icon="share-nodes">
+    Share individual notes with other users as viewer or editor
+  </Card>
+  <Card title="Tags" icon="tags">
+    Organize notes with custom-named, color-coded tags
+  </Card>
+  <Card title="Search" icon="magnifying-glass">
+    Full-text search across note titles and content, performed locally
+  </Card>
+  <Card title="Pin & archive" icon="thumbtack">
+    Pin important notes to the top and archive notes for later reference
+  </Card>
+  <Card title="Trash & recovery" icon="trash-can">
+    Soft-delete notes with a recovery period before permanent deletion
+  </Card>
+  <Card title="Admin panel" icon="shield">
+    Manage users, control registration, review pending signups, and configure OIDC
+  </Card>
+  <Card title="OIDC authentication" icon="id-card">
+    Integrate with any OpenID Connect provider — supports PKCE for mobile clients
+  </Card>
+</CardGroup>
+
+## Tech stack
+
+| Layer | Technology |
+|---|---|
+| Backend | NestJS, PostgreSQL, Prisma |
+| Web frontend | Next.js, TypeScript, Tailwind CSS |
+| Mobile | Flutter (Android) |
+| Deployment | Docker (single container) |
+
+## License
+
+Anchor is licensed under the [GNU Affero General Public License v3.0 (AGPL-3.0)](https://github.com/zhfahim/anchor/blob/main/LICENSE). The source code is available on [GitHub](https://github.com/zhfahim/anchor).

@@ -1,80 +1,99 @@
 ---
 title: "Quickstart"
-description: "Start building awesome documentation in minutes"
+description: "Deploy Anchor with Docker and create your first note"
 ---
 
-## Get started in three steps
+Get Anchor running locally in minutes using Docker, then create your first note from the web interface.
 
-Get your documentation site running locally and make your first customization.
+## Prerequisites
 
-### Step 1: Set up your local environment
+- [Docker](https://docs.docker.com/get-docker/) and Docker Compose installed on your machine
 
-<AccordionGroup>
-  <Accordion icon="copy" title="Clone your docs locally">
-    During the onboarding process, you created a GitHub repository with your docs content if you didn't already have one. You can find a link to this repository in your [dashboard](https://dashboard.mintlify.com).
-    
-    To clone the repository locally so that you can make and preview changes to your docs, follow the [Cloning a repository](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository) guide in the GitHub docs.
-  </Accordion>
-  <Accordion icon="rectangle-terminal" title="Start the preview server">
-    1. Install the Mintlify CLI: `npm i -g mint`
-    2. Navigate to your docs directory and run: `mint dev`
-    3. Open `http://localhost:3000` to see your docs live!
-    
-    <Tip>Your preview updates automatically as you edit files.</Tip>
-  </Accordion>
-</AccordionGroup>
+## Deploy with Docker
 
-### Step 2: Deploy your changes
+<Steps>
+  <Step title="Create a docker-compose.yml">
+    Create a new directory for Anchor and add the following `docker-compose.yml` file:
 
-<AccordionGroup>
-  <Accordion icon="github" title="Install our GitHub app">
-    Install the Mintlify GitHub app from your [dashboard](https://dashboard.mintlify.com/settings/organization/github-app).
-    
-    Our GitHub app automatically deploys your changes to your docs site, so you don't need to manage deployments yourself.
-</Accordion>
-<Accordion icon="palette" title="Update your site name and colors">
-    For a first change, let's update the name and colors of your docs site.
+    ```yaml docker-compose.yml
+    services:
+      anchor:
+        image: ghcr.io/zhfahim/anchor:latest
+        container_name: anchor
+        restart: unless-stopped
+        ports:
+          - "3000:3000"
+        volumes:
+          - anchor_data:/data
 
-    1. Open `docs.json` in your editor.
-    2. Change the `"name"` field to your project name.
-    3. Update the `"colors"` to match your brand.
-    4. Save and see your changes instantly at `http://localhost:3000`.
+    volumes:
+      anchor_data:
+    ```
 
-    <Tip>Try changing the primary color to see an immediate difference!</Tip>
-  </Accordion>
-</AccordionGroup>
+    <Note>
+      Anchor uses an embedded PostgreSQL database by default — no separate database container is required. All data is persisted in the `anchor_data` named volume.
+    </Note>
+  </Step>
 
-### Step 3: Go live
+  <Step title="Start the container">
+    From the directory containing your `docker-compose.yml`, run:
 
-<Accordion icon="rocket" title="Publish your docs">
-  1. Commit and push your changes.
-  2. Your docs will update and be live in moments!
-</Accordion>
+    ```bash
+    docker compose up -d
+    ```
 
-## Next steps
+    Docker will pull the latest image and start the container in the background. The first startup may take a few seconds while the database initializes.
+  </Step>
 
-Now that you have your docs running, explore these key features:
+  <Step title="Open the app">
+    Navigate to [http://localhost:3000](http://localhost:3000) in your browser. You should see the Anchor login page.
+  </Step>
+
+  <Step title="Create your account">
+    Click **Sign up** and register with your name, email address, and a password.
+
+    <Note>
+      The first user to register automatically becomes an administrator. As an admin, you can manage users, configure registration settings, and set up OIDC authentication from the admin panel.
+    </Note>
+  </Step>
+
+  <Step title="Create your first note">
+    Once logged in, you'll land on the main notes dashboard.
+
+    1. Click the **New note** button to open the editor.
+    2. Give your note a title.
+    3. Add content using the rich text editor — supports bold, italic, headings, lists, and checkboxes.
+    4. Your note saves automatically as you type and syncs across devices when you sign in elsewhere.
+
+    You can also organize notes with **tags**, **pin** important notes to the top, and **archive** notes you want to keep but not see in your main feed.
+  </Step>
+
+  <Step title="Install the mobile app">
+    Anchor has an Android app that syncs with your self-hosted instance.
+
+    1. Visit the [GitHub Releases page](https://github.com/zhfahim/anchor/releases).
+    2. Download the **Universal APK** (`anchor-{version}.apk`) — this works on all Android devices.
+    3. Install the APK, enter the URL of your Anchor instance (e.g. `http://localhost:3000`), and sign in with your account credentials.
+
+    <Note>
+      Architecture-specific APKs (arm64, x86_64, etc.) are also available on the releases page if you want a smaller download tailored to your device's CPU.
+    </Note>
+  </Step>
+</Steps>
+
+## What's next
 
 <CardGroup cols={2}>
-
-<Card title="Write Content" icon="pen-to-square" href="/essentials/markdown">
-  Learn MDX syntax and start writing your documentation.
-</Card>
-
-<Card title="Customize style" icon="palette" href="/essentials/settings">
-  Make your docs match your brand perfectly.
-</Card>
-
-<Card title="Add code examples" icon="square-code" href="/essentials/code">
-  Include syntax-highlighted code blocks.
-</Card>
-
-<Card title="API documentation" icon="code" href="/api-reference/introduction">
-  Auto-generate API docs from OpenAPI specs.
-</Card>
-
+  <Card title="Self Hosting" icon="server" href="/self-hosting/docker">
+    Configure environment variables, use an external PostgreSQL database, or expose Anchor behind a reverse proxy.
+  </Card>
+  <Card title="OIDC Authentication" icon="key" href="/authentication/oidc">
+    Connect Anchor to an OpenID Connect provider such as Pocket ID, Authelia, Authentik, or Keycloak.
+  </Card>
+  <Card title="API Reference" icon="code" href="/api-reference/overview">
+    Explore the REST API to build integrations or automate note management.
+  </Card>
+  <Card title="Mobile App" icon="mobile" href="/mobile/installation">
+    Learn more about installing and configuring the Android app.
+  </Card>
 </CardGroup>
-
-<Note>
-  **Need help?** See our [full documentation](https://mintlify.com/docs) or join our [community](https://mintlify.com/community).
-</Note>

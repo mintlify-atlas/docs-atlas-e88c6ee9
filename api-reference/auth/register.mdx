@@ -1,0 +1,101 @@
+---
+title: "Register"
+description: "Create a new user account"
+---
+
+## Endpoint
+
+```
+POST /api/auth/register
+```
+
+No authentication required.
+
+<Note>
+  The first user to register on a new Anchor instance is automatically granted admin status.
+</Note>
+
+<Warning>
+  Registration behavior depends on the `USER_SIGNUP` setting configured by your admin:
+  - **open** — anyone can register and immediately access the app
+  - **review** — accounts are created in a `pending` state and must be approved by an admin before login is allowed
+  - **disabled** — registration is closed; returns `403 Forbidden`
+</Warning>
+
+## Request Body
+
+<ParamField body="email" type="string" required>
+  The user's email address. Must be a valid email format and unique across all accounts.
+</ParamField>
+
+<ParamField body="password" type="string" required>
+  The account password. Minimum 8 characters.
+</ParamField>
+
+<ParamField body="name" type="string" required>
+  The user's display name. Maximum 100 characters.
+</ParamField>
+
+## Example Request
+
+```bash
+curl -X POST https://your-anchor.example.com/api/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "alice@example.com",
+    "password": "supersecret123",
+    "name": "Alice"
+  }'
+```
+
+## Response
+
+For **active** accounts, returns JWT tokens alongside the user object:
+
+<ResponseField name="access_token" type="string">
+  Short-lived JWT for authenticating API requests.
+</ResponseField>
+
+<ResponseField name="refresh_token" type="string">
+  Long-lived token (90 days) used to obtain new access tokens.
+</ResponseField>
+
+<ResponseField name="user" type="object">
+  The newly created user.
+
+  <Expandable title="user fields">
+    <ResponseField name="id" type="string">
+      Unique user ID (UUID).
+    </ResponseField>
+    <ResponseField name="email" type="string">
+      The user's email address.
+    </ResponseField>
+    <ResponseField name="name" type="string">
+      The user's display name.
+    </ResponseField>
+    <ResponseField name="profileImage" type="string | null">
+      URL path to the user's profile image, or `null` if not set.
+    </ResponseField>
+    <ResponseField name="isAdmin" type="boolean">
+      Whether the user has admin privileges.
+    </ResponseField>
+    <ResponseField name="status" type="string">
+      Account status. Either `active` or `pending`.
+    </ResponseField>
+    <ResponseField name="createdAt" type="string">
+      ISO 8601 timestamp of account creation.
+    </ResponseField>
+    <ResponseField name="updatedAt" type="string">
+      ISO 8601 timestamp of last account update.
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+For **pending** accounts (when `USER_SIGNUP` is `review`), tokens are not returned:
+
+```json
+{
+  "user": { ... },
+  "message": "Registration successful. Your account is pending approval."
+}
+```

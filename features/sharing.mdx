@@ -1,0 +1,87 @@
+---
+title: "Note Sharing"
+description: "Share notes with other users with viewer or editor permissions"
+---
+
+Anchor lets you share individual notes with other users on the same Anchor instance. Sharing is controlled per-note and supports two permission levels: **viewer** (read-only) and **editor** (can make changes).
+
+<Warning>
+Note sharing requires both users to have accounts on the **same Anchor instance**. You cannot share notes across separate self-hosted deployments.
+</Warning>
+
+## How Sharing Works
+
+When you share a note, a `NoteShare` record is created linking your note to another user's account. That user will then see the shared note appear in their own notes list. The share includes:
+
+- The note being shared (`noteId`)
+- The user it is shared with (`sharedWithUserId`)
+- The user who created the share (`sharedByUserId`)
+- The permission level (`viewer` or `editor`)
+
+Each note can only be shared once with any given user — the combination of `(noteId, sharedWithUserId)` is unique in the database.
+
+<Tabs>
+  <Tab title="Sharing a Note">
+    <Steps>
+      <Step title="Open the note you want to share">
+        Navigate to the note and open its options menu.
+      </Step>
+      <Step title="Select Share">
+        Choose **Share** from the note options. A sharing dialog will appear.
+      </Step>
+      <Step title="Enter the recipient's user ID">
+        Provide the `sharedWithUserId` of the Anchor user you want to share with. Both accounts must exist on the same Anchor instance.
+      </Step>
+      <Step title="Choose a permission level">
+        Select either **Viewer** or **Editor**:
+        - **Viewer** — the recipient can read the note but cannot modify it.
+        - **Editor** — the recipient can read and edit the note's title, content, and formatting.
+      </Step>
+      <Step title="Confirm">
+        Submit the share. This calls `POST /api/notes/:id/shares` with the recipient's user ID and the chosen permission.
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="Managing Shared Access">
+    <Steps>
+      <Step title="Open the note's share list">
+        From the note options, select **Manage Access**. This calls `GET /api/notes/:id/shares` and displays all active shares for the note.
+      </Step>
+      <Step title="Update a permission">
+        To change a recipient's permission from `viewer` to `editor` or vice versa, select their entry and choose the new permission level. This calls `PATCH /api/notes/:id/shares/:shareId`.
+      </Step>
+      <Step title="Revoke access">
+        To remove a user's access entirely, select their entry and choose **Remove**. This calls `DELETE /api/notes/:id/shares/:shareId` and sets `isDeleted` on the share record. The note will no longer appear in the recipient's notes list.
+      </Step>
+    </Steps>
+  </Tab>
+</Tabs>
+
+## Permission Levels
+
+| Permission | Can view | Can edit |
+|---|---|---|
+| `viewer` | Yes | No |
+| `editor` | Yes | Yes |
+
+Only the note owner can share a note, update share permissions, or revoke access.
+
+## Notes Shared With You
+
+Notes that other users have shared with you appear alongside your own notes in the main notes list. You can identify shared notes by the sharing indicator shown in the note card.
+
+- With **viewer** permission you can read the note but any edit controls will be disabled.
+- With **editor** permission you can modify the note's content and formatting. Your changes are synced back to the owner's copy.
+
+## Scope of Sharing
+
+Sharing in Anchor is scoped to individual notes. There is no folder-level or tag-level sharing — each note must be shared independently. If you want to share a group of related notes, share each one individually and apply a common tag to help the recipient organize them.
+
+## API Reference
+
+| Method | Endpoint | Description |
+|---|---|---|
+| `POST` | `/api/notes/:id/shares` | Share a note with another user |
+| `GET` | `/api/notes/:id/shares` | List all shares for a note |
+| `PATCH` | `/api/notes/:id/shares/:shareId` | Update the permission on an existing share |
+| `DELETE` | `/api/notes/:id/shares/:shareId` | Revoke a share |

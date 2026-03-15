@@ -1,0 +1,123 @@
+---
+title: Update note
+description: Partially update an existing note. All fields are optional — only the fields you include are changed.
+---
+
+Updates a note using a partial payload. Only the fields included in the request body are modified; all other fields retain their current values.
+
+## Path parameters
+
+<ParamField path="id" type="string" required>
+  The UUID of the note to update.
+</ParamField>
+
+## Request body
+
+All body fields are optional.
+
+<ParamField body="title" type="string">
+  New title for the note.
+</ParamField>
+
+<ParamField body="content" type="string">
+  Rich text HTML content.
+</ParamField>
+
+<ParamField body="isPinned" type="boolean">
+  Pin or unpin the note.
+</ParamField>
+
+<ParamField body="isArchived" type="boolean">
+  Archive or unarchive the note.
+</ParamField>
+
+<ParamField body="background" type="string">
+  Background color or pattern identifier.
+</ParamField>
+
+<ParamField body="tagIds" type="string[]">
+  Complete replacement of the note's tags. The provided array replaces all existing tag assignments — pass an empty array to remove all tags.
+</ParamField>
+
+## Response
+
+Returns the updated Note object.
+
+<ResponseField name="id" type="string" required>
+  Unique identifier (UUID).
+</ResponseField>
+
+<ResponseField name="title" type="string" required>
+  Note title.
+</ResponseField>
+
+<ResponseField name="content" type="string">
+  Rich text HTML content.
+</ResponseField>
+
+<ResponseField name="isPinned" type="boolean" required>
+  Whether the note is pinned.
+</ResponseField>
+
+<ResponseField name="isArchived" type="boolean" required>
+  Whether the note is archived.
+</ResponseField>
+
+<ResponseField name="background" type="string">
+  Background identifier.
+</ResponseField>
+
+<ResponseField name="state" type="string" required>
+  Note state: `active`, `trashed`, or `deleted`.
+</ResponseField>
+
+<ResponseField name="createdAt" type="string" required>
+  ISO 8601 creation timestamp.
+</ResponseField>
+
+<ResponseField name="updatedAt" type="string" required>
+  ISO 8601 timestamp of this update.
+</ResponseField>
+
+<ResponseField name="userId" type="string" required>
+  ID of the owning user.
+</ResponseField>
+
+<ResponseField name="tags" type="object[]" required>
+  Updated array of tags assigned to this note.
+</ResponseField>
+
+<RequestExample>
+
+```bash cURL
+curl --request PATCH \
+  --url 'https://anchor.example.com/api/notes/a1b2c3d4-e5f6-7890-abcd-ef1234567890' \
+  --header 'Authorization: Bearer <token>' \
+  --header 'Content-Type: application/json' \
+  --data '{
+    "title": "Updated title",
+    "isPinned": true
+  }'
+```
+
+</RequestExample>
+
+<ResponseExample>
+
+```json 200
+{
+  "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  "title": "Updated title",
+  "content": "<p>Existing content unchanged</p>",
+  "isPinned": true,
+  "isArchived": false,
+  "background": null,
+  "state": "active",
+  "createdAt": "2024-03-01T10:00:00.000Z",
+  "updatedAt": "2024-03-15T12:00:00.000Z",
+  "userId": "user-uuid-here",
+  "tags": []
+}
+```
+
+</ResponseExample>

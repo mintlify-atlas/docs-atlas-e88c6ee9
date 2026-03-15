@@ -1,0 +1,113 @@
+---
+title: Get note
+description: Retrieve a single note by its ID, including all assigned tags.
+---
+
+Returns a single note belonging to the authenticated user. The response includes the full note object with its associated tags.
+
+## Path parameters
+
+<ParamField path="id" type="string" required>
+  The UUID of the note to retrieve.
+</ParamField>
+
+## Response
+
+Returns a Note object.
+
+<ResponseField name="id" type="string" required>
+  Unique identifier (UUID).
+</ResponseField>
+
+<ResponseField name="title" type="string" required>
+  Note title.
+</ResponseField>
+
+<ResponseField name="content" type="string">
+  Rich text HTML content. `null` if no content has been set.
+</ResponseField>
+
+<ResponseField name="isPinned" type="boolean" required>
+  Whether the note is pinned.
+</ResponseField>
+
+<ResponseField name="isArchived" type="boolean" required>
+  Whether the note is archived.
+</ResponseField>
+
+<ResponseField name="background" type="string">
+  Background color or pattern identifier. `null` if not set.
+</ResponseField>
+
+<ResponseField name="state" type="string" required>
+  Note state. One of `active`, `trashed`, or `deleted`.
+</ResponseField>
+
+<ResponseField name="createdAt" type="string" required>
+  ISO 8601 timestamp of when the note was created.
+</ResponseField>
+
+<ResponseField name="updatedAt" type="string" required>
+  ISO 8601 timestamp of the last update.
+</ResponseField>
+
+<ResponseField name="userId" type="string" required>
+  ID of the user who owns this note.
+</ResponseField>
+
+<ResponseField name="tags" type="object[]" required>
+  <Expandable title="Tag properties">
+    <ResponseField name="id" type="string" required>
+      Tag UUID.
+    </ResponseField>
+    <ResponseField name="name" type="string" required>
+      Tag name.
+    </ResponseField>
+    <ResponseField name="color" type="string">
+      Tag color identifier or hex value. `null` if not set.
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<RequestExample>
+
+```bash cURL
+curl --request GET \
+  --url 'https://anchor.example.com/api/notes/a1b2c3d4-e5f6-7890-abcd-ef1234567890' \
+  --header 'Authorization: Bearer <token>'
+```
+
+</RequestExample>
+
+<ResponseExample>
+
+```json 200
+{
+  "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  "title": "Meeting notes",
+  "content": "<p>Discussed Q3 roadmap...</p>",
+  "isPinned": false,
+  "isArchived": false,
+  "background": "blue",
+  "state": "active",
+  "createdAt": "2024-03-01T10:00:00.000Z",
+  "updatedAt": "2024-03-10T14:30:00.000Z",
+  "userId": "user-uuid-here",
+  "tags": [
+    {
+      "id": "tag-uuid-here",
+      "name": "work",
+      "color": "#3B82F6"
+    }
+  ]
+}
+```
+
+```json 404
+{
+  "statusCode": 404,
+  "message": "Note not found"
+}
+```
+
+</ResponseExample>
